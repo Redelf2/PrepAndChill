@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Background -->
+
     <color name="bg_black">#FF000000</color>
 
-    <!-- Purple brand colors -->
+
     <color name="purple_primary">#FFA855F7</color>
     <color name="purple_dark">#FF7E22CE</color>
     <color name="purple_glow_soft">#0DA855F7</color>
     <color name="purple_icon_bg">#1AA855F7</color>
 
-    <!-- Text colors -->
     <color name="white">#FFFFFFFF</color>
     <color name="text_muted">#FF94A3B8</color>
 
 
     <color name="button_shadow">#33A855F7</color>
 
-    <color name="bg_black">#0D0D0D</color>
+<!--    <color name="bg_black">#0D0D0D</color>-->
     <color name="card_dark">#1A1A1A</color>
     <color name="accent_orange">#FF5C00</color>
     <color name="accent_purple">#9B5CF6</color>

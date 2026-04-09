@@ -13,24 +13,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 import android.graphics.Color;
 
-public class CreateAccountActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private boolean passwordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_account);
+        setContentView(R.layout.activity_login);
 
-        EditText etFullName = findViewById(R.id.etFullName);
         EditText etEmail = findViewById(R.id.etEmail);
         EditText etPassword = findViewById(R.id.etPassword);
         ImageView btnBack = findViewById(R.id.btnBack);
         ImageView btnToggle = findViewById(R.id.btnTogglePassword);
-        MaterialButton btnCreate = findViewById(R.id.btnCreateAccount);
-        TextView tvLogin = findViewById(R.id.tvLogin);
+        MaterialButton btnLogin = findViewById(R.id.btnLogin);
+        TextView tvSignUp = findViewById(R.id.tvSignUp);
 
-        etFullName.setHintTextColor(Color.parseColor("#475569"));
         etEmail.setHintTextColor(Color.parseColor("#475569"));
         etPassword.setHintTextColor(Color.parseColor("#475569"));
 
@@ -47,24 +45,23 @@ public class CreateAccountActivity extends AppCompatActivity {
             etPassword.setSelection(etPassword.length());
         });
 
-        btnCreate.setOnClickListener(v -> {
-            String name = etFullName.getText().toString().trim();
+        btnLogin.setOnClickListener(v -> {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
-            if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(CreateAccountActivity.this, ExamSelectionActivity.class);
+            Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(LoginActivity.this, ExamSelectionActivity.class);
             startActivity(intent);
             finish();
         });
 
-        tvLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(CreateAccountActivity.this, LoginActivity.class);
+        tvSignUp.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, CreateAccountActivity.class);
             startActivity(intent);
             finish();
         });
