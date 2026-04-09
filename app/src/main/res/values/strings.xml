@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Prep &amp; Chill</string>
+    <string name="app_name_display">Prep &amp; Chill</string>
+    <string name="tagline">Study smarter. Stress less.</string>
+    <string name="get_started">Get Started</string>
+</resources>
