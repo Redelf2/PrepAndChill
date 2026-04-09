@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- bg_icon_circle.xml — Circular background for the app icon with purple tint -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="#1AA855F7" />  <!-- ~10% opacity purple -->
+
+</shape>
