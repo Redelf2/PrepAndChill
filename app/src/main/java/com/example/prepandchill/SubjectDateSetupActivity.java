@@ -1,87 +1,116 @@
 package com.example.prepandchill;
 
-import android.content.Intent;
+import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
-public class SubjectDateSetupActivity extends AppCompatActivity {
+public class SubjectDateSetupActivity extends AppCompatActivity implements SubjectAdapter.OnSubjectClickListener {
 
-    // Track checked state for each subject
-    boolean[] checked = {true, true, false, false};
-
-    View checkbox1, checkbox2, checkbox3, checkbox4;
-    LinearLayout subjectRow1, subjectRow2, subjectRow3, subjectRow4;
-    TextView tvSubjectsReady;
+    private List<Subject> subjectList;
+    private SubjectAdapter adapter;
+    private TextView tvSubjectsReady;
+    private RecyclerView rvSubjects;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject_date_setup);
 
-        // Back button
         ImageView btnBack = findViewById(R.id.btnBack);
+        rvSubjects = findViewById(R.id.rvSubjects);
+        tvSubjectsReady = findViewById(R.id.tvSubjectsReady);
+        View btnAddSubject = findViewById(R.id.btnAddSubject);
+        MaterialButton btnSaveContinue = findViewById(R.id.btnSaveContinue);
+
         btnBack.setOnClickListener(v -> finish());
 
-        // Checkboxes
-        checkbox1 = findViewById(R.id.checkbox1);
-        checkbox2 = findViewById(R.id.checkbox2);
-        checkbox3 = findViewById(R.id.checkbox3);
-        checkbox4 = findViewById(R.id.checkbox4);
+        subjectList = new ArrayList<>();
+        subjectList.add(new Subject("Advanced Mathematics", "Set your exam date", true));
+        subjectList.add(new Subject("Quantum Physics", "Set your exam date", true));
 
-        // Subject rows (clicking the whole row toggles checkbox)
-        subjectRow1 = findViewById(R.id.subjectRow1);
-        subjectRow2 = findViewById(R.id.subjectRow2);
-        subjectRow3 = findViewById(R.id.subjectRow3);
-        subjectRow4 = findViewById(R.id.subjectRow4);
+        adapter = new SubjectAdapter(subjectList, this);
+        rvSubjects.setLayoutManager(new LinearLayoutManager(this));
+        rvSubjects.setAdapter(adapter);
 
-        // Subject ready count label
-        tvSubjectsReady = findViewById(R.id.tvSubjectsReady);
+        btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
-        // Set click listeners on each row
-        subjectRow1.setOnClickListener(v -> toggleCheckbox(0, checkbox1, subjectRow1));
-        subjectRow2.setOnClickListener(v -> toggleCheckbox(1, checkbox2, subjectRow2));
-        subjectRow3.setOnClickListener(v -> toggleCheckbox(2, checkbox3, subjectRow3));
-        subjectRow4.setOnClickListener(v -> toggleCheckbox(3, checkbox4, subjectRow4));
-
-        // Add New Subject button
-        LinearLayout btnAddSubject = findViewById(R.id.btnAddSubject);
-        btnAddSubject.setOnClickListener(v -> {
-            // TODO: open add subject dialog
-        });
-
-        // Save and Continue button
-        MaterialButton btnSaveContinue = findViewById(R.id.btnSaveContinue);
         btnSaveContinue.setOnClickListener(v -> {
-
+            Toast.makeText(this, "Setup saved successfully!", Toast.LENGTH_SHORT).show();
+            finish();
         });
 
-        // Set initial UI state
         updateUI();
     }
 
-    private void toggleCheckbox(int index, View checkbox, LinearLayout row) {
-        checked[index] = !checked[index];
+    private void showAddSubjectDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_subject, null);
+        builder.setView(view);
 
-        if (checked[index]) {
-            checkbox.setBackgroundResource(R.drawable.bg_checkbox_checked);
-            row.setAlpha(1.0f);
-        } else {
-            checkbox.setBackgroundResource(R.drawable.bg_checkbox_unchecked);
-            row.setAlpha(0.7f);
-        }
+        EditText etSubjectName = view.findViewById(R.id.etSubjectName);
+        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
 
+        AlertDialog dialog = builder.create();
+
+        btnAdd.setOnClickListener(v -> {
+            String name = etSubjectName.getText().toString().trim();
+            if (!TextUtils.isEmpty(name)) {
+                subjectList.add(new Subject(name, "Set your exam date", true));
+                adapter.notifyItemInserted(subjectList.size() - 1);
+                updateUI();
+                dialog.dismiss();
+            } else {
+                Toast.makeText(this, "Enter subject name", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
+    @Override
+    public void onSubjectClick(int position) {
+        Subject subject = subjectList.get(position);
+        subject.setSelected(!subject.isSelected());
+        adapter.notifyItemChanged(position);
         updateUI();
+    }
+
+    @Override
+    public void onCalendarClick(int position) {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
+            String date = dayOfMonth + "/" + (month1 + 1) + "/" + year1;
+            subjectList.get(position).setExamDate(date);
+            subjectList.get(position).setSelected(true);
+            adapter.notifyItemChanged(position);
+            updateUI();
+        }, year, month, day);
+
+        datePickerDialog.show();
     }
 
     private void updateUI() {
         int count = 0;
-        for (boolean b : checked) {
-            if (b) count++;
+        for (Subject s : subjectList) {
+            if (s.isSelected()) count++;
         }
         tvSubjectsReady.setText(count + " subject" + (count == 1 ? "" : "s") + " ready");
     }

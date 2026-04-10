@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-
     <LinearLayout
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
@@ -38,7 +37,6 @@
             android:gravity="center"
             android:paddingEnd="32dp" />
     </LinearLayout>
-
 
     <LinearLayout
         android:id="@+id/layoutProgress"
@@ -76,7 +74,6 @@
                 android:textColor="#A855F7" />
         </LinearLayout>
 
-        <!-- Progress bar: 2 of 4 = 50% -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="8dp"
@@ -97,7 +94,6 @@
         </LinearLayout>
     </LinearLayout>
 
-
     <ScrollView
         android:id="@+id/scrollContent"
         android:layout_width="match_parent"
@@ -115,7 +111,6 @@
             android:paddingTop="16dp"
             android:paddingBottom="16dp">
 
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -125,7 +120,6 @@
                 android:textColor="#A855F7"
                 android:layout_marginBottom="8dp" />
 
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,7 +127,6 @@
                 android:textSize="14sp"
                 android:textColor="#94A3B8"
                 android:layout_marginBottom="24dp" />
-
 
             <TextView
                 android:layout_width="match_parent"
@@ -144,201 +137,13 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="12dp" />
 
-
-            <LinearLayout
-                android:id="@+id/subjectRow1"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSubjects"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_subject_item"
-                android:padding="17dp"
-                android:layout_marginBottom="10dp">
+                android:nestedScrollingEnabled="false"
+                android:layout_marginBottom="16dp" />
 
-                <View
-                    android:id="@+id/checkbox1"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:background="@drawable/bg_checkbox_checked"
-                    android:layout_marginEnd="15dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Advanced Mathematics"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Set your Exam Data"
-                        android:textSize="12sp"
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="#A855F7"
-                    android:contentDescription="Calendar" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/subjectRow2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_subject_item"
-                android:padding="17dp"
-                android:layout_marginBottom="10dp">
-
-                <View
-                    android:id="@+id/checkbox2"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:background="@drawable/bg_checkbox_checked"
-                    android:layout_marginEnd="15dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quantum Physics"
-                        android:textColor="#F1F5F9"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Set your exam date"
-                        android:textSize="12sp"
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="#A855F7"
-                    android:contentDescription="Calendar" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/subjectRow3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_subject_item"
-                android:padding="17dp"
-                android:layout_marginBottom="10dp"
-                android:alpha="0.7">
-
-                <View
-                    android:id="@+id/checkbox3"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:background="@drawable/bg_checkbox_unchecked"
-                    android:layout_marginEnd="15dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Organic Chemistry"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="No date selected"
-                        android:textSize="12sp"
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="#475569"
-                    android:contentDescription="Calendar" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/subjectRow4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_subject_item"
-                android:padding="17dp"
-                android:layout_marginBottom="16dp"
-                android:alpha="0.7">
-
-                <View
-                    android:id="@+id/checkbox4"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:background="@drawable/bg_checkbox_unchecked"
-                    android:layout_marginEnd="15dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Computer Science"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#F1F5F9" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Default timeline"
-                        android:textSize="12sp"
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="#475569"
-                    android:contentDescription="Calendar" />
-            </LinearLayout>
-
-            <!-- Add New Subject -->
             <LinearLayout
                 android:id="@+id/btnAddSubject"
                 android:layout_width="match_parent"
@@ -366,7 +171,6 @@
         </LinearLayout>
     </ScrollView>
 
-
     <LinearLayout
         android:id="@+id/layoutFooter"
         android:layout_width="match_parent"
@@ -379,12 +183,11 @@
         android:paddingBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-
         <TextView
             android:id="@+id/tvSubjectsReady"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2 subjects ready"
+            android:text="0 subjects ready"
             android:textSize="14sp"
             android:textColor="#94A3B8"
             android:layout_marginBottom="16dp" />
