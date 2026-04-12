@@ -16,11 +16,13 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="24dp"
+        android:background="@drawable/bg_social_button"
         android:padding="10dp"
         android:src="@drawable/ic_back_arrow"
         app:layout_constraintBottom_toBottomOf="@id/toolbar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/toolbar" />
+        app:layout_constraintTop_toTopOf="@id/toolbar"
+        app:tint="#F1F5F9" />
 
     <TextView
         android:id="@+id/tvStep"
@@ -171,6 +173,7 @@
                         android:textColor="#F1F5F9"
                         android:textSize="15sp" />
                     <TextView
+                        android:id="@+id/tvLinearAlgebraPercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/public_sans_bold"
@@ -180,6 +183,7 @@
                 </LinearLayout>
 
                 <SeekBar
+                    android:id="@+id/seekBarLinearAlgebra"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -203,6 +207,7 @@
                         android:textColor="#F1F5F9"
                         android:textSize="15sp" />
                     <TextView
+                        android:id="@+id/tvMultivariablePercent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/public_sans_bold"
@@ -212,6 +217,7 @@
                 </LinearLayout>
 
                 <SeekBar
+                    android:id="@+id/seekBarMultivariable"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
