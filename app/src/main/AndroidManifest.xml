@@ -23,6 +23,7 @@
         <activity android:name=".LoginActivity" />
         <activity android:name=".ExamSelectionActivity" />
         <activity android:name=".SubjectDateSetupActivity" />
+        <activity android:name=".SubjectAssessmentActivity" />
 
     </application>
 
