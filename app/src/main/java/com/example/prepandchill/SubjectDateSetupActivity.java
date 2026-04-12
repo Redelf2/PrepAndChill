@@ -1,6 +1,7 @@
 package com.example.prepandchill;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -49,8 +50,8 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
         btnSaveContinue.setOnClickListener(v -> {
-            Toast.makeText(this, "Setup saved successfully!", Toast.LENGTH_SHORT).show();
-            finish();
+            Intent intent = new Intent(SubjectDateSetupActivity.this, SubjectAssessmentActivity.class);
+            startActivity(intent);
         });
 
         updateUI();
