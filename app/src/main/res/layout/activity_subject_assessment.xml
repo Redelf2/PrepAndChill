@@ -16,7 +16,6 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="24dp"
-        android:background="@drawable/bg_social_button"
         android:padding="10dp"
         android:src="@drawable/ic_back_arrow"
         app:layout_constraintBottom_toBottomOf="@id/toolbar"
@@ -158,8 +157,7 @@
                         android:id="@+id/ivArrowMath"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:rotation="90"
-                        android:src="@drawable/ic_back_arrow"
+                        android:src="@drawable/ic_dropdown_arrow"
                         app:tint="#475569" />
                 </LinearLayout>
 
@@ -278,8 +276,7 @@
                         android:id="@+id/ivArrowPhysics"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:rotation="-90"
-                        android:src="@drawable/ic_back_arrow"
+                        android:src="@drawable/ic_dropdown_arrow"
                         app:tint="#475569" />
                 </LinearLayout>
 
@@ -339,8 +336,7 @@
                         android:id="@+id/ivArrowAlgorithm"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:rotation="-90"
-                        android:src="@drawable/ic_back_arrow"
+                        android:src="@drawable/ic_dropdown_arrow"
                         app:tint="#475569" />
                 </LinearLayout>
 
