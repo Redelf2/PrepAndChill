@@ -11,7 +11,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.acitivity_subject_assesment);
+        setContentView(R.layout.activity_subject_assessment);
 
         ImageView btnBack = findViewById(R.id.btnBack);
         MaterialButton btnGenerate = findViewById(R.id.btnGenerate);
