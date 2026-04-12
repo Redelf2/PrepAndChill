@@ -69,10 +69,10 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     private void toggleVisibility(LinearLayout layout, ImageView arrow) {
         if (layout.getVisibility() == View.VISIBLE) {
             layout.setVisibility(View.GONE);
-            arrow.setRotation(-90);
+            arrow.setRotation(270);
         } else {
             layout.setVisibility(View.VISIBLE);
-            arrow.setRotation(90);
+            arrow.setRotation(0);
         }
     }
 }
