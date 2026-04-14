@@ -1,5 +1,6 @@
 package com.example.prepandchill;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -62,7 +63,14 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         });
 
         btnGenerate.setOnClickListener(v -> {
-            Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_SHORT).show();
+            
+            // Navigate to HomeActivity
+            Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
+            // Clear activity stack so user doesn't go back to assessment after plan is generated
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
         });
     }
 
