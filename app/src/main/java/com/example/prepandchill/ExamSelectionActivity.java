@@ -2,7 +2,13 @@ package com.example.prepandchill;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,11 +40,11 @@ public class ExamSelectionActivity extends AppCompatActivity {
         examList.add(new ExamOption("···", "Other", false));
 
         adapter = new ExamAdapter(examList, position -> {
-            for (int i = 0; i < examList.size(); i++) {
-                examList.get(i).setSelected(i == position);
+            if (examList.get(position).getName().equals("Other")) {
+                showCustomExamDialog(position);
+            } else {
+                updateSelection(position);
             }
-            selectedExam = examList.get(position).getName();
-            adapter.notifyDataSetChanged();
         });
 
         rvExamOptions.setLayoutManager(new GridLayoutManager(this, 2));
@@ -48,5 +54,37 @@ public class ExamSelectionActivity extends AppCompatActivity {
             Intent intent = new Intent(ExamSelectionActivity.this, SubjectDateSetupActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void updateSelection(int position) {
+        for (int i = 0; i < examList.size(); i++) {
+            examList.get(i).setSelected(i == position);
+        }
+        selectedExam = examList.get(position).getName();
+        adapter.notifyDataSetChanged();
+    }
+
+    private void showCustomExamDialog(int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_custom_exam, null);
+        builder.setView(view);
+
+        EditText etCustomExam = view.findViewById(R.id.etCustomExam);
+        MaterialButton btnDone = view.findViewById(R.id.btnDone);
+
+        AlertDialog dialog = builder.create();
+
+        btnDone.setOnClickListener(v -> {
+            String name = etCustomExam.getText().toString().trim();
+            if (!TextUtils.isEmpty(name)) {
+                examList.get(position).setName(name);
+                updateSelection(position);
+                dialog.dismiss();
+            } else {
+                Toast.makeText(this, "Please enter exam name", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 }

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -50,7 +51,20 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
         btnSaveContinue.setOnClickListener(v -> {
+            ArrayList<Subject> selectedSubjects = new ArrayList<>();
+            for (Subject s : subjectList) {
+                if (s.isSelected()) {
+                    selectedSubjects.add(s);
+                }
+            }
+
+            if (selectedSubjects.isEmpty()) {
+                Toast.makeText(this, "Please select at least one subject", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Intent intent = new Intent(SubjectDateSetupActivity.this, SubjectAssessmentActivity.class);
+            intent.putExtra("selectedSubjects", selectedSubjects);
             startActivity(intent);
         });
 

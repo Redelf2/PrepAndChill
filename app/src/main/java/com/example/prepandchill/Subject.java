@@ -1,6 +1,8 @@
 package com.example.prepandchill;
 
-public class Subject {
+import java.io.Serializable;
+
+public class Subject implements Serializable {
     private String name;
     private String examDate;
     private boolean isSelected;
