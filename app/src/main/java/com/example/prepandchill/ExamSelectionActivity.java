@@ -2,15 +2,19 @@ package com.example.prepandchill;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExamSelectionActivity extends AppCompatActivity {
 
-    String selectedOption = "GATE"; // default
+    private List<ExamOption> examList;
+    private ExamAdapter adapter;
+    private String selectedExam = "GATE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,34 +22,27 @@ public class ExamSelectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_exam_selection);
 
         ImageView btnBack = findViewById(R.id.btnBack);
-        FrameLayout optGate = findViewById(R.id.optionGate);
-        FrameLayout optSemester = findViewById(R.id.optionSemester);
-        FrameLayout optPlacements = findViewById(R.id.optionPlacements);
-        FrameLayout optOther = findViewById(R.id.optionOther);
+        RecyclerView rvExamOptions = findViewById(R.id.rvExamOptions);
         MaterialButton btnContinue = findViewById(R.id.btnContinue);
 
         btnBack.setOnClickListener(v -> finish());
 
-        View.OnClickListener optionClick = v -> {
-            // Reset all to unselected
-            optGate.setBackgroundResource(R.drawable.bg_option_unselected);
-            optSemester.setBackgroundResource(R.drawable.bg_option_unselected);
-            optPlacements.setBackgroundResource(R.drawable.bg_option_unselected);
-            optOther.setBackgroundResource(R.drawable.bg_option_unselected);
+        examList = new ArrayList<>();
+        examList.add(new ExamOption("🎓", "GATE", true));
+        examList.add(new ExamOption("📖", "Semester", false));
+        examList.add(new ExamOption("💼", "Placements", false));
+        examList.add(new ExamOption("···", "Other", false));
 
-            // Highlight selected
-            v.setBackgroundResource(R.drawable.bg_option_selected);
+        adapter = new ExamAdapter(examList, position -> {
+            for (int i = 0; i < examList.size(); i++) {
+                examList.get(i).setSelected(i == position);
+            }
+            selectedExam = examList.get(position).getName();
+            adapter.notifyDataSetChanged();
+        });
 
-            if (v.getId() == R.id.optionGate) selectedOption = "GATE";
-            else if (v.getId() == R.id.optionSemester) selectedOption = "SEMESTER";
-            else if (v.getId() == R.id.optionPlacements) selectedOption = "PLACEMENTS";
-            else selectedOption = "OTHER";
-        };
-
-        optGate.setOnClickListener(optionClick);
-        optSemester.setOnClickListener(optionClick);
-        optPlacements.setOnClickListener(optionClick);
-        optOther.setOnClickListener(optionClick);
+        rvExamOptions.setLayoutManager(new GridLayoutManager(this, 2));
+        rvExamOptions.setAdapter(adapter);
 
         btnContinue.setOnClickListener(v -> {
             Intent intent = new Intent(ExamSelectionActivity.this, SubjectDateSetupActivity.class);
