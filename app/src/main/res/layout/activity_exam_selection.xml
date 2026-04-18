@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-
     <LinearLayout
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
@@ -24,7 +23,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ic_back_arrow"
-            android:tint="#F1F5F9"
+            app:tint="#F1F5F9"
             android:contentDescription="Back" />
 
         <TextView
@@ -39,7 +38,6 @@
             android:paddingEnd="32dp" />
     </LinearLayout>
 
-    <!-- Progress Section: Step 1 of 4 -->
     <LinearLayout
         android:id="@+id/layoutProgress"
         android:layout_width="match_parent"
@@ -76,7 +74,6 @@
                 android:textColor="#22C55E" />
         </LinearLayout>
 
-        <!-- Progress bar: 1 of 4 = 25% -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="8dp"
@@ -97,7 +94,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Title -->
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
@@ -112,154 +108,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 2x2 Grid -->
-    <GridLayout
-        android:id="@+id/gridOptions"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvExamOptions"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="24dp"
-        android:columnCount="2"
-        android:rowCount="2"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintBottom_toTopOf="@id/btnContinue">
+        app:layout_constraintBottom_toTopOf="@id/btnContinue" />
 
-        <!-- GATE -->
-        <FrameLayout
-            android:id="@+id/optionGate"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_option_selected">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:text="🎓"
-                    android:textSize="32sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="14dp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="GATE"
-                    android:textSize="19sp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-        </FrameLayout>
-
-        <!-- Semester -->
-        <FrameLayout
-            android:id="@+id/optionSemester"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_option_unselected">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:text="📖"
-                    android:textSize="32sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="14dp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Semester"
-                    android:textSize="19sp"
-                    android:textStyle="bold"
-                    android:textColor="#CBD5E1" />
-            </LinearLayout>
-        </FrameLayout>
-
-        <!-- Placements -->
-        <FrameLayout
-            android:id="@+id/optionPlacements"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_option_unselected">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:text="💼"
-                    android:textSize="32sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="14dp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Placements"
-                    android:textSize="19sp"
-                    android:textStyle="bold"
-                    android:textColor="#CBD5E1" />
-            </LinearLayout>
-        </FrameLayout>
-
-
-        <FrameLayout
-            android:id="@+id/optionOther"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_option_unselected">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:text="···"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:textColor="#94A3B8"
-                    android:layout_marginBottom="14dp" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Other"
-                    android:textSize="19sp"
-                    android:textStyle="bold"
-                    android:textColor="#CBD5E1" />
-            </LinearLayout>
-        </FrameLayout>
-
-    </GridLayout>
-
-    <!-- Continue Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnContinue"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="58dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
@@ -274,8 +135,6 @@
         app:backgroundTint="@null"
         app:cornerRadius="12dp"
         app:elevation="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
