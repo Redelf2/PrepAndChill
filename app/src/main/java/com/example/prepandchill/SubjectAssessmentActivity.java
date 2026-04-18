@@ -40,6 +40,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         btnGenerate.setOnClickListener(v -> {
             Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
             Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
+            intent.putExtra("selectedSubjects", selectedSubjects);
             startActivity(intent);
             finish();
         });
