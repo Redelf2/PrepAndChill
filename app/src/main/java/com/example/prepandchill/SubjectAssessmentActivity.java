@@ -1,5 +1,6 @@
 package com.example.prepandchill;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +39,9 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
 
         btnGenerate.setOnClickListener(v -> {
             Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
@@ -56,7 +60,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         header.setOnClickListener(v -> {
             if (details.getVisibility() == View.VISIBLE) {
                 details.setVisibility(View.GONE);
-                arrow.setRotation(-90);
+                arrow.setRotation(270);
             } else {
                 details.setVisibility(View.VISIBLE);
                 arrow.setRotation(0);
