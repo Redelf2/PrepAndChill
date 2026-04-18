@@ -25,6 +25,7 @@
         <activity android:name=".SubjectDateSetupActivity" />
         <activity android:name=".SubjectAssessmentActivity" />
         <activity android:name=".HomeActivity" />
+        <activity android:name=".TimetableActivity" />
 
     </application>
 
