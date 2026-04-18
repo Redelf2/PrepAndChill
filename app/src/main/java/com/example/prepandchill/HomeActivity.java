@@ -10,8 +10,8 @@ import java.util.ArrayList;
 public class HomeActivity extends AppCompatActivity {
 
     private ArrayList<Subject> selectedSubjects;
-    private RecyclerView rvHomeSubjects;
-    private SubjectAdapter adapter;
+    private RecyclerView rvTodayPlan;
+    private HomeSubjectAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,21 +24,17 @@ public class HomeActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_home);
 
-        rvHomeSubjects = findViewById(R.id.rvHomeSubjects);
+        rvTodayPlan = findViewById(R.id.rvTodayPlan);
         selectedSubjects = (ArrayList<Subject>) getIntent().getSerializableExtra("selectedSubjects");
 
         if (selectedSubjects == null) {
             selectedSubjects = new ArrayList<>();
         }
 
-        adapter = new SubjectAdapter(selectedSubjects, new SubjectAdapter.OnSubjectClickListener() {
-            @Override
-            public void onSubjectClick(int position) {}
-            @Override
-            public void onCalendarClick(int position) {}
-        });
-
-        rvHomeSubjects.setLayoutManager(new LinearLayoutManager(this));
-        rvHomeSubjects.setAdapter(adapter);
+        adapter = new HomeSubjectAdapter(selectedSubjects);
+        
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        rvTodayPlan.setLayoutManager(layoutManager);
+        rvTodayPlan.setAdapter(adapter);
     }
 }

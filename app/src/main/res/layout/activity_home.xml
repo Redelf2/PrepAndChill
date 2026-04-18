@@ -112,17 +112,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:text="Your Selected Subjects"
+                android:text="Today's Plan"
                 android:textColor="#F1F5F9"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvHomeSubjects"
+                android:id="@+id/rvTodayPlan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:nestedScrollingEnabled="false" />
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -183,7 +184,7 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="#000000"
+        android:background="@color/bg_black"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -197,13 +198,13 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_book_open"
-                app:tint="#A855F7" />
+                android:src="@drawable/ic_home"
+                app:tint="@color/accent_orange" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Home"
-                android:textColor="#A855F7"
+                android:textColor="@color/accent_orange"
                 android:textSize="10sp" />
         </LinearLayout>
 
@@ -216,13 +217,51 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_calendar"
-                app:tint="#64748B" />
+                android:src="@drawable/ic_study"
+                app:tint="@color/nav_inactive" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Calendar"
-                android:textColor="#64748B"
+                android:text="Study"
+                android:textColor="@color/nav_inactive"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_analytics"
+                app:tint="@color/nav_inactive" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Analytics"
+                android:textColor="@color/nav_inactive"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_clock"
+                app:tint="@color/nav_inactive" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Focus"
+                android:textColor="@color/nav_inactive"
                 android:textSize="10sp" />
         </LinearLayout>
 
