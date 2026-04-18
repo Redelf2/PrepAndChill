@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_black">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:id="@+id/rlHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="64dp"
+        android:paddingBottom="20dp"
+        android:paddingHorizontal="20dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_home_card"
+            android:padding="8dp"
+            android:src="@drawable/ic_back_arrow"
+            app:tint="@color/accent_orange"
+            android:contentDescription="Back" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/confidence_map"
+            android:textColor="@color/text_white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_analytics_graph"
+            android:contentDescription="Analytics" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Top Stats -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Avg Confidence -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_streak_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/avg_confidence"
+                        android:textColor="@color/text_gray"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_68_percent"
+                            android:textColor="@color/text_white"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/sample_up_5_percent"
+                            android:textColor="#00C853"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="16dp"
+                        android:progress="68"
+                        android:progressDrawable="@drawable/bg_progress_fill_orange" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="12dp"
+                    android:layout_height="match_parent" />
+
+                <!-- Total Topics -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_exam_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/total_topics"
+                        android:textColor="@color/text_gray"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sample_124"
+                            android:textColor="@color/text_white"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/sample_plus_12"
+                            android:textColor="#00C853"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/sample_mastered_count"
+                        android:textColor="@color/text_gray"
+                        android:textSize="11sp"
+                        tools:ignore="SmallSp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Chips -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_chip_selected"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="8dp"
+                        android:text="@string/strong"
+                        android:textColor="@color/text_white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_chip_unselected"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="8dp"
+                        android:text="@string/mid"
+                        android:textColor="@color/text_gray" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_chip_unselected"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="8dp"
+                        android:text="@string/weak"
+                        android:textColor="@color/text_gray" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_chip_unselected"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="8dp"
+                        android:text="@string/in_progress"
+                        android:textColor="@color/text_gray" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Subject Breakdown Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/subject_breakdown"
+                    android:textColor="@color/text_white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/view_all"
+                    android:textColor="@color/accent_orange"
+                    android:textSize="14sp" />
+            </RelativeLayout>
+
+            <!-- Subject Grid -->
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:columnCount="2">
+
+                <!-- DBMS -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_session_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/ivIconDb"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_home_card"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_database"
+                            app:tint="@color/mastery_blue"
+                            android:contentDescription="DBMS Icon" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_database"
+                            android:alpha="0.2"
+                            android:contentDescription="Decorative Icon" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/dbms"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/database_systems"
+                        android:textColor="@color/text_gray"
+                        android:textSize="11sp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_82_percent" android:textColor="@color/mastery_blue" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                    </RelativeLayout>
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="82" android:progressDrawable="@drawable/bg_progress_fill_purple" />
+                </LinearLayout>
+
+                <!-- MAD -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_session_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/ivIconMad"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_home_card"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_mobile"
+                            app:tint="@color/mastery_purple"
+                            android:contentDescription="MAD Icon" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_mobile"
+                            android:alpha="0.2"
+                            android:contentDescription="Decorative Icon" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/mad"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mobile_dev"
+                        android:textColor="@color/text_gray"
+                        android:textSize="11sp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_45_percent" android:textColor="@color/mastery_purple" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                    </RelativeLayout>
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="45" android:progressDrawable="@drawable/bg_progress_fill_purple" />
+                </LinearLayout>
+
+            </GridLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:columnCount="2">
+
+                <!-- DCCN -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_session_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/ivIconDccn"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_home_card"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_network"
+                            app:tint="@color/mastery_orange"
+                            android:contentDescription="DCCN Icon" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_network"
+                            android:alpha="0.2"
+                            android:contentDescription="Decorative Icon" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/dccn"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/networking"
+                        android:textColor="@color/text_gray"
+                        android:textSize="11sp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_76_percent" android:textColor="@color/mastery_orange" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                    </RelativeLayout>
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="76" android:progressDrawable="@drawable/bg_progress_fill_orange" />
+                </LinearLayout>
+
+                <!-- OS -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_session_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/ivIconOs"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_home_card"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_cpu"
+                            app:tint="@color/mastery_green"
+                            android:contentDescription="OS Icon" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:src="@drawable/ic_book_open"
+                            android:alpha="0.2"
+                            app:tint="@color/text_gray"
+                            android:contentDescription="Decorative Icon" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/os"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/operating_sys"
+                        android:textColor="@color/text_gray"
+                        android:textSize="11sp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_32_percent" android:textColor="@color/mastery_green" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                    </RelativeLayout>
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="32" android:progressDrawable="@drawable/bg_progress_fill_orange" />
+                </LinearLayout>
+
+            </GridLayout>
+
+            <!-- Critical Review -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_warning"
+                    android:contentDescription="Warning Icon" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/critical_review"
+                    android:textColor="@color/text_white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_streak_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/memory_paging"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/last_attempted"
+                        android:textColor="@color/text_gray"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/accent_orange"
+                    android:text="@string/recap"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_recap"
+                    app:iconGravity="textEnd"
+                    app:iconPadding="8dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="40dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

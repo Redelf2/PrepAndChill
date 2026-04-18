@@ -4,4 +4,38 @@
     <string name="app_name_display">Prep &amp; Chill</string>
     <string name="tagline">Study smarter. Stress less.</string>
     <string name="get_started">Get Started</string>
+    <string name="confidence_map">Confidence Map</string>
+    <string name="avg_confidence">Avg. Confidence</string>
+    <string name="total_topics">Total Topics</string>
+    <string name="mastered_format">%1$d/%2$d Mastered</string>
+    <string name="strong">Strong</string>
+    <string name="mid">Mid</string>
+    <string name="weak">Weak</string>
+    <string name="in_progress">In Progress</string>
+    <string name="subject_breakdown">Subject Breakdown</string>
+    <string name="view_all">View All</string>
+    <string name="mastery">MASTERY</string>
+    <string name="dbms">DBMS</string>
+    <string name="database_systems">Database Systems</string>
+    <string name="mad">MAD</string>
+    <string name="mobile_dev">Mobile Dev</string>
+    <string name="dccn">DCCN</string>
+    <string name="networking">Networking</string>
+    <string name="os">OS</string>
+    <string name="operating_sys">Operating Sys</string>
+    <string name="critical_review">Critical Review</string>
+    <string name="memory_paging">Memory Paging</string>
+    <string name="last_attempted">Last attempted 2 days ago</string>
+    <string name="recap">RECAP</string>
+
+    <!-- Sample Data Strings for Preview -->
+    <string name="sample_68_percent">68%</string>
+    <string name="sample_up_5_percent">↗5%</string>
+    <string name="sample_124">124</string>
+    <string name="sample_plus_12">+12</string>
+    <string name="sample_mastered_count">84/124 Mastered</string>
+    <string name="sample_82_percent">82%</string>
+    <string name="sample_45_percent">45%</string>
+    <string name="sample_76_percent">76%</string>
+    <string name="sample_32_percent">32%</string>
 </resources>

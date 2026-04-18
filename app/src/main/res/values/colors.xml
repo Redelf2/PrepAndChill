@@ -32,4 +32,9 @@
     <color name="chart_bar_default">#3D2B1F</color>
     <color name="chart_bar_highlight">#FF5C00</color>
 
+    <color name="mastery_blue">#3A86FF</color>
+    <color name="mastery_purple">#9B5CF6</color>
+    <color name="mastery_orange">#FF5C00</color>
+    <color name="mastery_green">#00C853</color>
+
 </resources>

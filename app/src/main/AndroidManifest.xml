@@ -26,6 +26,7 @@
         <activity android:name=".SubjectAssessmentActivity" />
         <activity android:name=".HomeActivity" />
         <activity android:name=".TimetableActivity" />
+        <activity android:name=".ConfidenceMapActivity" />
 
     </application>
 
