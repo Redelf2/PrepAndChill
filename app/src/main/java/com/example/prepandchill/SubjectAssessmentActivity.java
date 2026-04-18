@@ -1,7 +1,7 @@
 package com.example.prepandchill;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -10,77 +10,68 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
+import java.util.ArrayList;
 
 public class SubjectAssessmentActivity extends AppCompatActivity {
+
+    private LinearLayout container;
+    private ArrayList<Subject> selectedSubjects;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject_assessment);
 
+        container = findViewById(R.id.llAssessmentContainer);
         ImageView btnBack = findViewById(R.id.btnBack);
         MaterialButton btnGenerate = findViewById(R.id.btnGenerate);
-        
-        LinearLayout headerMath = findViewById(R.id.headerMath);
-        LinearLayout layoutDetailsMath = findViewById(R.id.layoutDetailsMath);
-        ImageView ivArrowMath = findViewById(R.id.ivArrowMath);
-
-        LinearLayout headerPhysics = findViewById(R.id.headerPhysics);
-        LinearLayout layoutDetailsPhysics = findViewById(R.id.layoutDetailsPhysics);
-        ImageView ivArrowPhysics = findViewById(R.id.ivArrowPhysics);
-
-        LinearLayout headerAlgorithm = findViewById(R.id.headerAlgorithm);
-        LinearLayout layoutDetailsAlgorithm = findViewById(R.id.layoutDetailsAlgorithm);
-        ImageView ivArrowAlgorithm = findViewById(R.id.ivArrowAlgorithm);
-
-        SeekBar seekBarLinearAlgebra = findViewById(R.id.seekBarLinearAlgebra);
-        TextView tvLinearAlgebraPercent = findViewById(R.id.tvLinearAlgebraPercent);
-        SeekBar seekBarMultivariable = findViewById(R.id.seekBarMultivariable);
-        TextView tvMultivariablePercent = findViewById(R.id.tvMultivariablePercent);
 
         btnBack.setOnClickListener(v -> finish());
 
-        headerMath.setOnClickListener(v -> toggleVisibility(layoutDetailsMath, ivArrowMath));
-        headerPhysics.setOnClickListener(v -> toggleVisibility(layoutDetailsPhysics, ivArrowPhysics));
-        headerAlgorithm.setOnClickListener(v -> toggleVisibility(layoutDetailsAlgorithm, ivArrowAlgorithm));
+        selectedSubjects = (ArrayList<Subject>) getIntent().getSerializableExtra("selectedSubjects");
 
-        seekBarLinearAlgebra.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvLinearAlgebraPercent.setText(progress + "%");
+        if (selectedSubjects != null) {
+            for (Subject subject : selectedSubjects) {
+                addSubjectCard(subject);
             }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        seekBarMultivariable.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvMultivariablePercent.setText(progress + "%");
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
+        }
 
         btnGenerate.setOnClickListener(v -> {
-            Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_SHORT).show();
-            
-            // Navigate to HomeActivity
-            Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
-            // Clear activity stack so user doesn't go back to assessment after plan is generated
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+            Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
         });
     }
 
-    private void toggleVisibility(LinearLayout layout, ImageView arrow) {
-        if (layout.getVisibility() == View.VISIBLE) {
-            layout.setVisibility(View.GONE);
-            arrow.setRotation(270);
-        } else {
-            layout.setVisibility(View.VISIBLE);
-            arrow.setRotation(0);
-        }
+    private void addSubjectCard(Subject subject) {
+        View cardView = LayoutInflater.from(this).inflate(R.layout.item_assessment_card, container, false);
+
+        LinearLayout header = cardView.findViewById(R.id.headerSubject);
+        LinearLayout details = cardView.findViewById(R.id.layoutDetails);
+        ImageView arrow = cardView.findViewById(R.id.ivArrow);
+        TextView tvName = cardView.findViewById(R.id.tvSubjectName);
+        SeekBar seekBar = cardView.findViewById(R.id.seekBarProficiency);
+        TextView tvPercent = cardView.findViewById(R.id.tvPercent);
+
+        tvName.setText(subject.getName());
+        
+        header.setOnClickListener(v -> {
+            if (details.getVisibility() == View.VISIBLE) {
+                details.setVisibility(View.GONE);
+                arrow.setRotation(-90);
+            } else {
+                details.setVisibility(View.VISIBLE);
+                arrow.setRotation(0);
+            }
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvPercent.setText(progress + "%");
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        container.addView(cardView);
     }
 }

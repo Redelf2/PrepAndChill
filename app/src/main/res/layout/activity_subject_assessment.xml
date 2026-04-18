@@ -6,21 +6,27 @@
     android:background="#000000">
 
     <View
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/viewGlow"
+        android:layout_width="450dp"
+        android:layout_height="450dp"
+        android:background="@drawable/bg_purple_glow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="-180dp"
+        android:layout_marginEnd="-180dp"
+        android:alpha="0.4" />
 
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="24dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_social_button"
         android:padding="10dp"
         android:src="@drawable/ic_back_arrow"
-        app:layout_constraintBottom_toBottomOf="@id/toolbar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"
         app:tint="#F1F5F9" />
 
     <TextView
@@ -31,20 +37,23 @@
         android:text="Step 3 of 4"
         android:textColor="#F1F5F9"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/toolbar" />
+        app:layout_constraintTop_toTopOf="@+id/btnBack" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
         android:fillViewport="true"
         android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/btnGenerate"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        app:layout_constraintBottom_toTopOf="@+id/btnGenerate"
+        app:layout_constraintTop_toBottomOf="@id/btnBack">
 
         <LinearLayout
+            android:id="@+id/llAssessmentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -74,7 +83,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/public_sans_bold"
                     android:gravity="end"
-                    android:text="75%\nComplete"
+                    android:text="0%\nComplete"
                     android:textColor="#F97316"
                     android:textSize="14sp"
                     app:layout_constraintBottom_toBottomOf="@id/tvKnowledgeTitle"
@@ -87,7 +96,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
                     android:layout_marginTop="16dp"
-                    android:progress="75"
+                    android:progress="0"
                     android:progressDrawable="@drawable/bg_progress_fill_purple"
                     app:layout_constraintTop_toBottomOf="@id/tvKnowledgeTitle" />
 
@@ -110,250 +119,10 @@
                 android:text="Be honest with your proficiency levels to help us curate the perfect study roadmap."
                 android:textColor="#94A3B8"
                 android:textSize="15sp"
-                android:lineSpacingExtra="4dp" />
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="16dp"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/bg_assessment_card"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <LinearLayout
-                    android:id="@+id/headerMath"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_social_button">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="Σ"
-                            android:textColor="#F97316"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-                    </FrameLayout>
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/public_sans_bold"
-                        android:text="Advanced Mathematics"
-                        android:textColor="#F1F5F9"
-                        android:textSize="17sp" />
-
-                    <ImageView
-                        android:id="@+id/ivArrowMath"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        app:tint="#475569" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layoutDetailsMath"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="visible">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/public_sans_regular"
-                            android:text="Linear Algebra"
-                            android:textColor="#F1F5F9"
-                            android:textSize="15sp" />
-                        <TextView
-                            android:id="@+id/tvLinearAlgebraPercent"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/public_sans_bold"
-                            android:text="65%"
-                            android:textColor="#F97316"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <SeekBar
-                        android:id="@+id/seekBarLinearAlgebra"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:progress="65"
-                        android:progressTint="#F97316"
-                        android:thumbTint="#F97316" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/public_sans_regular"
-                            android:text="Multivariable Calculus"
-                            android:textColor="#F1F5F9"
-                            android:textSize="15sp" />
-                        <TextView
-                            android:id="@+id/tvMultivariablePercent"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/public_sans_bold"
-                            android:text="42%"
-                            android:textColor="#F97316"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <SeekBar
-                        android:id="@+id/seekBarMultivariable"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:paddingStart="0dp"
-                        android:paddingEnd="0dp"
-                        android:progress="42"
-                        android:progressTint="#F97316"
-                        android:thumbTint="#F97316" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_assessment_card"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:id="@+id/headerPhysics"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_social_button">
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_book_open"
-                            app:tint="#A855F7" />
-                    </FrameLayout>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/public_sans_bold"
-                        android:text="Quantum Physics"
-                        android:textColor="#F1F5F9"
-                        android:textSize="17sp" />
-                    <ImageView
-                        android:id="@+id/ivArrowPhysics"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        app:tint="#475569" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layoutDetailsPhysics"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Sub-topics for Physics..."
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
-                android:background="@drawable/bg_assessment_card"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:id="@+id/headerAlgorithm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-                    <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="@drawable/bg_social_button">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="&lt;/&gt;"
-                            android:textColor="#64748B"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-                    </FrameLayout>
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/public_sans_bold"
-                        android:text="Algorithm Design"
-                        android:textColor="#F1F5F9"
-                        android:textSize="17sp" />
-                    <ImageView
-                        android:id="@+id/ivArrowAlgorithm"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        app:tint="#475569" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layoutDetailsAlgorithm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Sub-topics for Algorithm Design..."
-                        android:textColor="#94A3B8" />
-                </LinearLayout>
-            </LinearLayout>
+            <!-- Dynamic content will be added here -->
 
         </LinearLayout>
     </ScrollView>
