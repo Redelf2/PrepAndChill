@@ -27,23 +27,27 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btnBack);
         MaterialButton btnGenerate = findViewById(R.id.btnGenerate);
 
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         selectedSubjects = (ArrayList<Subject>) getIntent().getSerializableExtra("selectedSubjects");
 
-        if (selectedSubjects != null) {
+        if (selectedSubjects != null && container != null) {
             for (Subject subject : selectedSubjects) {
                 addSubjectCard(subject);
             }
         }
 
-        btnGenerate.setOnClickListener(v -> {
-            Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
-            intent.putExtra("selectedSubjects", selectedSubjects);
-            startActivity(intent);
-            finish();
-        });
+        if (btnGenerate != null) {
+            btnGenerate.setOnClickListener(v -> {
+                Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
+                intent.putExtra("selectedSubjects", selectedSubjects);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
     private void addSubjectCard(Subject subject) {
@@ -56,26 +60,30 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         SeekBar seekBar = cardView.findViewById(R.id.seekBarProficiency);
         TextView tvPercent = cardView.findViewById(R.id.tvPercent);
 
-        tvName.setText(subject.getName());
+        if (tvName != null) tvName.setText(subject.getName());
         
-        header.setOnClickListener(v -> {
-            if (details.getVisibility() == View.VISIBLE) {
-                details.setVisibility(View.GONE);
-                arrow.setRotation(270);
-            } else {
-                details.setVisibility(View.VISIBLE);
-                arrow.setRotation(0);
-            }
-        });
+        if (header != null && details != null && arrow != null) {
+            header.setOnClickListener(v -> {
+                if (details.getVisibility() == View.VISIBLE) {
+                    details.setVisibility(View.GONE);
+                    arrow.setRotation(270);
+                } else {
+                    details.setVisibility(View.VISIBLE);
+                    arrow.setRotation(0);
+                }
+            });
+        }
 
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvPercent.setText(progress + "%");
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
+        if (seekBar != null && tvPercent != null) {
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    tvPercent.setText(progress + "%");
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
 
         container.addView(cardView);
     }

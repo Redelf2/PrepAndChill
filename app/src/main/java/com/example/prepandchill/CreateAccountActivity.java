@@ -1,6 +1,7 @@
 package com.example.prepandchill;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
@@ -9,18 +10,29 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.button.MaterialButton;
-import android.graphics.Color;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CreateAccountActivity extends AppCompatActivity {
 
     private boolean passwordVisible = false;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_account);
+
+
+        mAuth = FirebaseAuth.getInstance();
 
         EditText etFullName = findViewById(R.id.etFullName);
         EditText etEmail = findViewById(R.id.etEmail);
@@ -36,6 +48,7 @@ public class CreateAccountActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
+        // Show / Hide password
         btnToggle.setOnClickListener(v -> {
             if (passwordVisible) {
                 etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
@@ -47,7 +60,9 @@ public class CreateAccountActivity extends AppCompatActivity {
             etPassword.setSelection(etPassword.length());
         });
 
+
         btnCreate.setOnClickListener(v -> {
+
             String name = etFullName.getText().toString().trim();
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
@@ -57,11 +72,45 @@ public class CreateAccountActivity extends AppCompatActivity {
                 return;
             }
 
-            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(CreateAccountActivity.this, ExamSelectionActivity.class);
-            startActivity(intent);
-            finish();
+            if (password.length() < 6) {
+                Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+
+            mAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(task -> {
+
+                        if (task.isSuccessful()) {
+
+                            FirebaseUser user = mAuth.getCurrentUser();
+
+                            // Save user data in Firestore
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("name", name);
+                            map.put("email", email);
+
+                            db.collection("users")
+                                    .document(user.getUid())
+                                    .set(map);
+
+                            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+
+                            // Move to next screen
+                            Intent intent = new Intent(CreateAccountActivity.this, ExamSelectionActivity.class);
+                            startActivity(intent);
+                            finish();
+
+                        } else {
+                            Toast.makeText(this,
+                                    "Error: " + task.getException().getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
         });
+
 
         tvLogin.setOnClickListener(v -> {
             Intent intent = new Intent(CreateAccountActivity.this, LoginActivity.class);
