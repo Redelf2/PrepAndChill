@@ -61,7 +61,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         TextView tvPercent = cardView.findViewById(R.id.tvPercent);
 
         if (tvName != null) tvName.setText(subject.getName());
-        
+
         if (header != null && details != null && arrow != null) {
             header.setOnClickListener(v -> {
                 if (details.getVisibility() == View.VISIBLE) {
