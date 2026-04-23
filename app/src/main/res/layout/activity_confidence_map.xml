@@ -7,50 +7,60 @@
     android:background="@color/bg_black">
 
     <!-- Header -->
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="64dp"
+        android:paddingTop="48dp"
         android:paddingBottom="20dp"
         android:paddingHorizontal="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_centerVertical="true"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_home_card"
-            android:padding="8dp"
+            android:padding="10dp"
             android:src="@drawable/ic_back_arrow"
             app:tint="@color/accent_orange"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:contentDescription="Back" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:ellipsize="end"
-            android:maxLines="1"
             android:text="@string/confidence_map"
             android:textColor="@color/text_white"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
+            android:id="@+id/ivAnalytics"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_analytics_graph"
+            app:tint="@color/accent_orange"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:contentDescription="Analytics" />
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintTop_toBottomOf="@id/rlHeader">
 
         <LinearLayout
@@ -72,7 +82,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_streak_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -93,14 +103,15 @@
                             android:layout_height="wrap_content"
                             android:text="@string/sample_68_percent"
                             android:textColor="@color/text_white"
-                            android:textSize="24sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="@string/sample_up_5_percent"
+                            android:layout_marginBottom="4dp"
+                            android:text="↗5%"
                             android:textColor="#00C853"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -108,7 +119,7 @@
                     <ProgressBar
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="4dp"
+                        android:layout_height="6dp"
                         android:layout_marginTop="16dp"
                         android:progress="68"
                         android:progressDrawable="@drawable/bg_progress_fill_orange" />
@@ -125,7 +136,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_exam_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -144,16 +155,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/sample_124"
+                            android:text="124"
                             android:textColor="@color/text_white"
-                            android:textSize="24sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="@string/sample_plus_12"
+                            android:layout_marginBottom="4dp"
+                            android:text="+12"
                             android:textColor="#00C853"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -161,19 +173,18 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="@string/sample_mastered_count"
+                        android:layout_marginTop="12dp"
+                        android:text="84/124 Mastered"
                         android:textColor="@color/text_gray"
-                        android:textSize="11sp"
-                        tools:ignore="SmallSp" />
+                        android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Chips -->
+            <!-- Filters -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="28dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -186,8 +197,19 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_chip_selected"
                         android:paddingHorizontal="24dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="10dp"
                         android:text="@string/strong"
+                        android:textColor="@color/text_white"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_chip_unselected"
+                        android:paddingHorizontal="24dp"
+                        android:paddingVertical="10dp"
+                        android:text="@string/mid"
                         android:textColor="@color/text_white" />
 
                     <TextView
@@ -196,19 +218,9 @@
                         android:layout_marginStart="12dp"
                         android:background="@drawable/bg_chip_unselected"
                         android:paddingHorizontal="24dp"
-                        android:paddingVertical="8dp"
-                        android:text="@string/mid"
-                        android:textColor="@color/text_gray" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/bg_chip_unselected"
-                        android:paddingHorizontal="24dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="10dp"
                         android:text="@string/weak"
-                        android:textColor="@color/text_gray" />
+                        android:textColor="@color/text_white" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -216,9 +228,9 @@
                         android:layout_marginStart="12dp"
                         android:background="@drawable/bg_chip_unselected"
                         android:paddingHorizontal="24dp"
-                        android:paddingVertical="8dp"
+                        android:paddingVertical="10dp"
                         android:text="@string/in_progress"
-                        android:textColor="@color/text_gray" />
+                        android:textColor="@color/text_white" />
                 </LinearLayout>
             </HorizontalScrollView>
 
@@ -233,13 +245,14 @@
                     android:layout_height="wrap_content"
                     android:text="@string/subject_breakdown"
                     android:textColor="@color/text_white"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
                     android:text="@string/view_all"
                     android:textColor="@color/accent_orange"
                     android:textSize="14sp" />
@@ -260,27 +273,25 @@
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_session_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <ImageView
-                            android:id="@+id/ivIconDb"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/bg_home_card"
-                            android:padding="6dp"
+                            android:padding="8dp"
                             android:src="@drawable/ic_database"
-                            app:tint="@color/mastery_blue"
-                            android:contentDescription="DBMS Icon" />
+                            app:tint="@color/mastery_blue" />
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:layout_alignParentEnd="true"
                             android:src="@drawable/ic_database"
                             android:alpha="0.2"
-                            android:contentDescription="Decorative Icon" />
+                            app:tint="@color/text_gray" />
                     </RelativeLayout>
 
                     <TextView
@@ -297,16 +308,16 @@
                         android:layout_height="wrap_content"
                         android:text="@string/database_systems"
                         android:textColor="@color/text_gray"
-                        android:textSize="11sp" />
+                        android:textSize="12sp" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_82_percent" android:textColor="@color/mastery_blue" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        android:layout_marginTop="20dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="10sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="82%" android:textColor="@color/mastery_blue" android:textSize="10sp" android:textStyle="bold" />
                     </RelativeLayout>
-                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="82" android:progressDrawable="@drawable/bg_progress_fill_purple" />
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="6dp" android:progress="82" android:progressDrawable="@drawable/bg_progress_fill" />
                 </LinearLayout>
 
                 <!-- MAD -->
@@ -317,27 +328,25 @@
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_session_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <ImageView
-                            android:id="@+id/ivIconMad"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/bg_home_card"
-                            android:padding="6dp"
+                            android:padding="8dp"
                             android:src="@drawable/ic_mobile"
-                            app:tint="@color/mastery_purple"
-                            android:contentDescription="MAD Icon" />
+                            app:tint="@color/mastery_purple" />
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:layout_alignParentEnd="true"
                             android:src="@drawable/ic_mobile"
                             android:alpha="0.2"
-                            android:contentDescription="Decorative Icon" />
+                            app:tint="@color/text_gray" />
                     </RelativeLayout>
 
                     <TextView
@@ -354,25 +363,17 @@
                         android:layout_height="wrap_content"
                         android:text="@string/mobile_dev"
                         android:textColor="@color/text_gray"
-                        android:textSize="11sp" />
+                        android:textSize="12sp" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_45_percent" android:textColor="@color/mastery_purple" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        android:layout_marginTop="20dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="10sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="45%" android:textColor="@color/mastery_purple" android:textSize="10sp" android:textStyle="bold" />
                     </RelativeLayout>
-                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="45" android:progressDrawable="@drawable/bg_progress_fill_purple" />
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="6dp" android:progress="45" android:progressDrawable="@drawable/bg_progress_fill_purple" />
                 </LinearLayout>
-
-            </GridLayout>
-
-            <GridLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:columnCount="2">
 
                 <!-- DCCN -->
                 <LinearLayout
@@ -380,29 +381,28 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_marginEnd="6dp"
+                    android:layout_marginTop="12dp"
                     android:background="@drawable/bg_session_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <ImageView
-                            android:id="@+id/ivIconDccn"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/bg_home_card"
-                            android:padding="6dp"
+                            android:padding="8dp"
                             android:src="@drawable/ic_network"
-                            app:tint="@color/mastery_orange"
-                            android:contentDescription="DCCN Icon" />
+                            app:tint="@color/accent_orange" />
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:layout_alignParentEnd="true"
                             android:src="@drawable/ic_network"
                             android:alpha="0.2"
-                            android:contentDescription="Decorative Icon" />
+                            app:tint="@color/text_gray" />
                     </RelativeLayout>
 
                     <TextView
@@ -419,16 +419,16 @@
                         android:layout_height="wrap_content"
                         android:text="@string/networking"
                         android:textColor="@color/text_gray"
-                        android:textSize="11sp" />
+                        android:textSize="12sp" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_76_percent" android:textColor="@color/mastery_orange" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        android:layout_marginTop="20dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="10sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="76%" android:textColor="@color/accent_orange" android:textSize="10sp" android:textStyle="bold" />
                     </RelativeLayout>
-                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="76" android:progressDrawable="@drawable/bg_progress_fill_orange" />
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="6dp" android:progress="76" android:progressDrawable="@drawable/bg_progress_fill_orange" />
                 </LinearLayout>
 
                 <!-- OS -->
@@ -437,30 +437,28 @@
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
                     android:layout_marginStart="6dp"
+                    android:layout_marginTop="12dp"
                     android:background="@drawable/bg_session_card"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <ImageView
-                            android:id="@+id/ivIconOs"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/bg_home_card"
-                            android:padding="6dp"
+                            android:padding="8dp"
                             android:src="@drawable/ic_cpu"
-                            app:tint="@color/mastery_green"
-                            android:contentDescription="OS Icon" />
+                            app:tint="@color/mastery_green" />
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
                             android:layout_alignParentEnd="true"
-                            android:src="@drawable/ic_book_open"
+                            android:src="@drawable/ic_pomodoro"
                             android:alpha="0.2"
-                            app:tint="@color/text_gray"
-                            android:contentDescription="Decorative Icon" />
+                            app:tint="@color/text_gray" />
                     </RelativeLayout>
 
                     <TextView
@@ -477,56 +475,57 @@
                         android:layout_height="wrap_content"
                         android:text="@string/operating_sys"
                         android:textColor="@color/text_gray"
-                        android:textSize="11sp" />
+                        android:textSize="12sp" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="@string/sample_32_percent" android:textColor="@color/mastery_green" android:textSize="11sp" android:textStyle="bold" tools:ignore="SmallSp" />
+                        android:layout_marginTop="20dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/mastery" android:textColor="@color/text_gray" android:textSize="10sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:text="32%" android:textColor="@color/mastery_green" android:textSize="10sp" android:textStyle="bold" />
                     </RelativeLayout>
-                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="4dp" android:progress="32" android:progressDrawable="@drawable/bg_progress_fill_orange" />
+                    <ProgressBar style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="6dp" android:progress="32" android:progressDrawable="@drawable/bg_progress_fill" />
                 </LinearLayout>
-
             </GridLayout>
 
-            <!-- Critical Review -->
+            <!-- Critical Review Section -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
+
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_warning"
-                    android:contentDescription="Warning Icon" />
+                    app:tint="@color/accent_orange" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="@string/critical_review"
                     android:textColor="@color/text_white"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <LinearLayout
+            <!-- Critical Item 1 -->
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_streak_card"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_centerVertical="true"
                     android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -534,9 +533,11 @@
                         android:textColor="@color/text_white"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="@string/last_attempted"
                         android:textColor="@color/text_gray"
                         android:textSize="12sp" />
@@ -545,22 +546,160 @@
                 <com.google.android.material.button.MaterialButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
                     android:backgroundTint="@color/accent_orange"
-                    android:text="@string/recap"
+                    android:text="RECAP ⚡"
+                    android:textAllCaps="false"
                     android:textColor="@color/text_white"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     app:cornerRadius="12dp"
-                    app:icon="@drawable/ic_recap"
-                    app:iconGravity="textEnd"
-                    app:iconPadding="8dp" />
-            </LinearLayout>
+                    app:paddingEnd="16dp"
+                    app:paddingStart="16dp" />
+            </RelativeLayout>
+
+            <!-- Critical Item 2 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_streak_card"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="B+ Trees Indexing"
+                        android:textColor="@color/text_white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Last attempted 5 hours ago"
+                        android:textColor="@color/text_gray"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:backgroundTint="@color/accent_orange"
+                    android:text="RECAP ⚡"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    app:paddingEnd="16dp"
+                    app:paddingStart="16dp" />
+            </RelativeLayout>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="40dp" />
+                android:layout_height="20dp" />
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- Bottom Navigation -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@color/bg_black"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                app:tint="@color/nav_inactive" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HOME"
+                android:textColor="@color/nav_inactive"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_calendar"
+                app:tint="@color/nav_inactive" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="STUDY"
+                android:textColor="@color/nav_inactive"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_analytics"
+                app:tint="@color/accent_orange" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ANALYTICS"
+                android:textColor="@color/accent_orange"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_pomodoro"
+                app:tint="@color/nav_inactive" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="FOCUS"
+                android:textColor="@color/nav_inactive"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
