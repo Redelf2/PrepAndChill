@@ -52,6 +52,7 @@ public class ExamSelectionActivity extends AppCompatActivity {
 
         btnContinue.setOnClickListener(v -> {
             Intent intent = new Intent(ExamSelectionActivity.this, SubjectDateSetupActivity.class);
+            intent.putExtra("selectedExam", selectedExam);
             startActivity(intent);
         });
     }

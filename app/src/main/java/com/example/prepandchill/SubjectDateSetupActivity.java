@@ -26,11 +26,14 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
     private SubjectAdapter adapter;
     private TextView tvSubjectsReady;
     private RecyclerView rvSubjects;
+    private String selectedExam;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject_date_setup);
+
+        selectedExam = getIntent().getStringExtra("selectedExam");
 
         ImageView btnBack = findViewById(R.id.btnBack);
         rvSubjects = findViewById(R.id.rvSubjects);
@@ -65,6 +68,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
 
             Intent intent = new Intent(SubjectDateSetupActivity.this, SubjectAssessmentActivity.class);
             intent.putExtra("selectedSubjects", selectedSubjects);
+            intent.putExtra("selectedExam", selectedExam);
             startActivity(intent);
         });
 
@@ -120,6 +124,14 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         }, year, month, day);
 
         datePickerDialog.show();
+    }
+
+    @Override
+    public void onDeleteClick(int position) {
+        subjectList.remove(position);
+        adapter.notifyItemRemoved(position);
+        adapter.notifyItemRangeChanged(position, subjectList.size());
+        updateUI();
     }
 
     private void updateUI() {

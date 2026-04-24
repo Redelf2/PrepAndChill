@@ -63,7 +63,7 @@
                     android:src="@drawable/ic_notification" />
             </RelativeLayout>
 
-            <!-- Streak Card -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -173,6 +173,7 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tvProgressPercent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="18"
@@ -183,7 +184,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="DAYS LEFT"
+                            android:text="DONE"
                             android:textColor="@color/accent_purple"
                             android:textSize="8sp"
                             android:textStyle="bold" />
@@ -191,6 +192,7 @@
                 </RelativeLayout>
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewDetails"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"

@@ -3,6 +3,7 @@ package com.example.prepandchill;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,6 +17,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.SubjectV
     public interface OnSubjectClickListener {
         void onSubjectClick(int position);
         void onCalendarClick(int position);
+        void onDeleteClick(int position);
     }
 
     public SubjectAdapter(List<Subject> subjectList, OnSubjectClickListener listener) {
@@ -46,6 +48,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.SubjectV
 
         holder.itemView.setOnClickListener(v -> listener.onSubjectClick(position));
         holder.btnCalendar.setOnClickListener(v -> listener.onCalendarClick(position));
+        holder.btnDelete.setOnClickListener(v -> listener.onDeleteClick(position));
     }
 
     @Override
@@ -57,6 +60,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.SubjectV
         TextView tvSubjectName, tvExamDate;
         View checkbox;
         View btnCalendar;
+        ImageView btnDelete;
 
         public SubjectViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -64,6 +68,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.SubjectV
             tvExamDate = itemView.findViewById(R.id.tvExamDate);
             checkbox = itemView.findViewById(R.id.checkbox);
             btnCalendar = itemView.findViewById(R.id.btnCalendar);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 }

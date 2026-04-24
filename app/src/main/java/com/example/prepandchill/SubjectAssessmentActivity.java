@@ -17,11 +17,14 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
 
     private LinearLayout container;
     private ArrayList<Subject> selectedSubjects;
+    private String selectedExam;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject_assessment);
+
+        selectedExam = getIntent().getStringExtra("selectedExam");
 
         container = findViewById(R.id.llAssessmentContainer);
         ImageView btnBack = findViewById(R.id.btnBack);
@@ -44,6 +47,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                 Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
                 intent.putExtra("selectedSubjects", selectedSubjects);
+                intent.putExtra("selectedExam", selectedExam);
                 startActivity(intent);
                 finish();
             });
@@ -75,10 +79,14 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         }
 
         if (seekBar != null && tvPercent != null) {
+            seekBar.setProgress(subject.getProficiency());
+            tvPercent.setText(subject.getProficiency() + "%");
+            
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     tvPercent.setText(progress + "%");
+                    subject.setProficiency(progress);
                 }
                 @Override public void onStartTrackingTouch(SeekBar seekBar) {}
                 @Override public void onStopTrackingTouch(SeekBar seekBar) {}
