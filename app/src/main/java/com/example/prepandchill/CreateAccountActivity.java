@@ -113,8 +113,21 @@ public class CreateAccountActivity extends AppCompatActivity {
                     finish();
                 },
                 error -> {
+                    String msg;
+                    if (error instanceof NoConnectionError || error instanceof TimeoutError) {
+                        msg = "Can't reach server. Check Wi‑Fi/mobile data and ensure the server is running and reachable.";
+                    } else if (error instanceof AuthFailureError) {
+                        msg = "Auth failure while contacting server.";
+                    } else if (error instanceof ServerError) {
+                        msg = "Server error. Check backend logs.";
+                    } else if (error instanceof ParseError) {
+                        msg = "Bad response from server (parse error).";
+                    } else {
+                        msg = "Network error: " + error.toString();
+                    }
+
                     Toast.makeText(this,
-                            "Network Error: " + error.toString(),
+                            msg,
                             Toast.LENGTH_LONG).show();
                 }
         );
