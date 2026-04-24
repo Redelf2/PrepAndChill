@@ -6,34 +6,59 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
+
+// Firebase
+import com.google.firebase.auth.*;
+
+// Google
+import com.google.android.gms.auth.api.signin.*;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
     private boolean passwordVisible = false;
     private FirebaseAuth mAuth;
 
+    private GoogleSignInClient googleSignInClient;
+    private static final int RC_SIGN_IN = 100;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        //  Auto-login (skip login screen if already logged in)
+       
         if (mAuth.getCurrentUser() != null) {
             startActivity(new Intent(this, ExamSelectionActivity.class));
             finish();
         }
+
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+
 
         EditText etEmail = findViewById(R.id.etEmail);
         EditText etPassword = findViewById(R.id.etPassword);
@@ -41,6 +66,9 @@ public class LoginActivity extends AppCompatActivity {
         ImageView btnToggle = findViewById(R.id.btnTogglePassword);
         MaterialButton btnLogin = findViewById(R.id.btnLogin);
         TextView tvSignUp = findViewById(R.id.tvSignUp);
+
+
+        View googleBtn = findViewById(R.id.btnGoogle);
 
         etEmail.setHintTextColor(Color.parseColor("#475569"));
         etPassword.setHintTextColor(Color.parseColor("#475569"));
@@ -77,8 +105,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
 
-                            Intent intent = new Intent(LoginActivity.this, ExamSelectionActivity.class);
-                            startActivity(intent);
+                            startActivity(new Intent(this, ExamSelectionActivity.class));
                             finish();
 
                         } else {
@@ -90,10 +117,64 @@ public class LoginActivity extends AppCompatActivity {
         });
 
 
+        googleBtn.setOnClickListener(v -> {
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
+
         tvSignUp.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, CreateAccountActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, CreateAccountActivity.class));
             finish();
         });
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account.getIdToken());
+            } catch (ApiException e) {
+                Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    private void firebaseAuthWithGoogle(String idToken) {
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+
+                    if (task.isSuccessful()) {
+
+                        FirebaseUser user = mAuth.getCurrentUser();
+
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("username", user.getDisplayName());
+                        map.put("email", user.getEmail());
+
+                        db.collection("users")
+                                .document(user.getUid())
+                                .set(map);
+
+                        Toast.makeText(this, "Google Login Successful", Toast.LENGTH_SHORT).show();
+
+                        startActivity(new Intent(this, ExamSelectionActivity.class));
+                        finish();
+
+                    } else {
+                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

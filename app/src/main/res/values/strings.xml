@@ -28,7 +28,7 @@
     <string name="last_attempted">Last attempted 2 days ago</string>
     <string name="recap">RECAP</string>
 
-    <!-- Sample Data Strings for Preview -->
+
     <string name="sample_68_percent">68%</string>
     <string name="sample_up_5_percent">↗5%</string>
     <string name="sample_124">124</string>
@@ -38,4 +38,5 @@
     <string name="sample_45_percent">45%</string>
     <string name="sample_76_percent">76%</string>
     <string name="sample_32_percent">32%</string>
+    <string name="default_web_client_id">YOUR_CLIENT_ID</string>
 </resources>
