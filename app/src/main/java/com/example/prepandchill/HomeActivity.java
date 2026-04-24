@@ -3,6 +3,7 @@ package com.example.prepandchill;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -42,6 +43,14 @@ public class HomeActivity extends AppCompatActivity {
         if (btnViewAll != null) {
             btnViewAll.setOnClickListener(v -> {
                 Intent intent = new Intent(HomeActivity.this, TimetableActivity.class);
+                startActivity(intent);
+            });
+        }
+
+        LinearLayout cvConfidenceMap = findViewById(R.id.cvConfidenceMap);
+        if (cvConfidenceMap != null) {
+            cvConfidenceMap.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeActivity.this, ConfidenceMapActivity.class);
                 startActivity(intent);
             });
         }
