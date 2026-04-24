@@ -48,10 +48,9 @@ public class LoginActivity extends AppCompatActivity {
         ImageView btnToggle = findViewById(R.id.btnTogglePassword);
         MaterialButton btnLogin = findViewById(R.id.btnLogin);
         TextView tvSignUp = findViewById(R.id.tvSignUp);
-
         View googleBtn = findViewById(R.id.btnGoogle);
 
-
+        // Google config
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -61,6 +60,7 @@ public class LoginActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
+        // Password toggle
         btnToggle.setOnClickListener(v -> {
             if (passwordVisible) {
                 etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
             etPassword.setSelection(etPassword.length());
         });
 
-        // Email login
+        // ✅ EMAIL LOGIN
         btnLogin.setOnClickListener(v -> {
 
             String email = etEmail.getText().toString().trim();
@@ -94,10 +94,15 @@ public class LoginActivity extends AppCompatActivity {
                     });
         });
 
-
+        // ✅ GOOGLE LOGIN (FIXED)
         googleBtn.setOnClickListener(v -> {
-            Intent signInIntent = googleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+
+            // 🔥 This ensures account chooser shows every time
+            googleSignInClient.signOut().addOnCompleteListener(task -> {
+
+                Intent signInIntent = googleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            });
         });
 
         tvSignUp.setOnClickListener(v -> {
@@ -105,6 +110,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    // Google result
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -121,6 +127,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    // Firebase auth
     private void firebaseAuthWithGoogle(String idToken) {
 
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
