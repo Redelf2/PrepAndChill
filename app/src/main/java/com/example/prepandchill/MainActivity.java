@@ -22,8 +22,8 @@ public class MainActivity extends AppCompatActivity {
 
         MaterialButton btnGetStarted = findViewById(R.id.btnGetStarted);
         btnGetStarted.setOnClickListener(v -> {
-            // Navigate to next screen (e.g. CreateAccountActivity)
-            Intent intent = new Intent(MainActivity.this, CreateAccountActivity.class);
+
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
         });
     }

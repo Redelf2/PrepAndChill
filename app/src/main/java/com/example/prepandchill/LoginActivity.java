@@ -16,11 +16,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
-
-// Firebase
 import com.google.firebase.auth.*;
 
-// Google
 import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
@@ -45,11 +42,14 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-       
-        if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(this, ExamSelectionActivity.class));
-            finish();
-        }
+        EditText etEmail = findViewById(R.id.etEmail);
+        EditText etPassword = findViewById(R.id.etPassword);
+        ImageView btnBack = findViewById(R.id.btnBack);
+        ImageView btnToggle = findViewById(R.id.btnTogglePassword);
+        MaterialButton btnLogin = findViewById(R.id.btnLogin);
+        TextView tvSignUp = findViewById(R.id.tvSignUp);
+
+        View googleBtn = findViewById(R.id.btnGoogle);
 
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -59,22 +59,7 @@ public class LoginActivity extends AppCompatActivity {
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-
-        EditText etEmail = findViewById(R.id.etEmail);
-        EditText etPassword = findViewById(R.id.etPassword);
-        ImageView btnBack = findViewById(R.id.btnBack);
-        ImageView btnToggle = findViewById(R.id.btnTogglePassword);
-        MaterialButton btnLogin = findViewById(R.id.btnLogin);
-        TextView tvSignUp = findViewById(R.id.tvSignUp);
-
-
-        View googleBtn = findViewById(R.id.btnGoogle);
-
-        etEmail.setHintTextColor(Color.parseColor("#475569"));
-        etPassword.setHintTextColor(Color.parseColor("#475569"));
-
         btnBack.setOnClickListener(v -> finish());
-
 
         btnToggle.setOnClickListener(v -> {
             if (passwordVisible) {
@@ -87,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
             etPassword.setSelection(etPassword.length());
         });
 
-
+        // Email login
         btnLogin.setOnClickListener(v -> {
 
             String email = etEmail.getText().toString().trim();
@@ -100,18 +85,11 @@ public class LoginActivity extends AppCompatActivity {
 
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
-
                         if (task.isSuccessful()) {
-
-                            Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-
                             startActivity(new Intent(this, ExamSelectionActivity.class));
                             finish();
-
                         } else {
-                            Toast.makeText(this,
-                                    "Login failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
                         }
                     });
         });
@@ -124,10 +102,8 @@ public class LoginActivity extends AppCompatActivity {
 
         tvSignUp.setOnClickListener(v -> {
             startActivity(new Intent(this, CreateAccountActivity.class));
-            finish();
         });
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -139,12 +115,11 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account.getIdToken());
-            } catch (ApiException e) {
+            } catch (Exception e) {
                 Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show();
             }
         }
     }
-
 
     private void firebaseAuthWithGoogle(String idToken) {
 
@@ -167,13 +142,8 @@ public class LoginActivity extends AppCompatActivity {
                                 .document(user.getUid())
                                 .set(map);
 
-                        Toast.makeText(this, "Google Login Successful", Toast.LENGTH_SHORT).show();
-
                         startActivity(new Intent(this, ExamSelectionActivity.class));
                         finish();
-
-                    } else {
-                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_SHORT).show();
                     }
                 });
     }

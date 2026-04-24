@@ -67,7 +67,7 @@ public class CreateAccountActivity extends AppCompatActivity {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
-            // 🔹 Validation
+
             if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
@@ -86,13 +86,13 @@ public class CreateAccountActivity extends AppCompatActivity {
 
                             FirebaseUser user = mAuth.getCurrentUser();
 
-                            // 🔴 Safety check
+
                             if (user == null) {
                                 Toast.makeText(this, "User creation failed", Toast.LENGTH_SHORT).show();
                                 return;
                             }
 
-                            // 🔹 Save extra data in Firestore
+
                             FirebaseFirestore db = FirebaseFirestore.getInstance();
 
                             Map<String, Object> map = new HashMap<>();
@@ -106,7 +106,7 @@ public class CreateAccountActivity extends AppCompatActivity {
 
                                         Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
 
-                                        // ✅ Move only after DB success
+
                                         Intent intent = new Intent(CreateAccountActivity.this, ExamSelectionActivity.class);
                                         startActivity(intent);
                                         finish();
@@ -117,7 +117,7 @@ public class CreateAccountActivity extends AppCompatActivity {
 
                         } else {
 
-                            // 🔹 Better error handling
+                            //  Better error handling
                             if (task.getException() instanceof FirebaseAuthUserCollisionException) {
                                 Toast.makeText(this, "Email already registered", Toast.LENGTH_SHORT).show();
                             } else {
