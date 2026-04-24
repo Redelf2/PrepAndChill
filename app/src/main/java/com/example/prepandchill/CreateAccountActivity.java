@@ -1,31 +1,26 @@
 package com.example.prepandchill;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.*;
+import com.android.volley.toolbox.*;
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthUserCollisionException;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.auth.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.json.JSONObject;
 
 public class CreateAccountActivity extends AppCompatActivity {
 
     private boolean passwordVisible = false;
     private FirebaseAuth mAuth;
+    private RequestQueue requestQueue; // ✅ important
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +28,7 @@ public class CreateAccountActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_account);
 
         mAuth = FirebaseAuth.getInstance();
+        requestQueue = Volley.newRequestQueue(this); // ✅ init once
 
         EditText etFullName = findViewById(R.id.etFullName);
         EditText etEmail = findViewById(R.id.etEmail);
@@ -40,26 +36,18 @@ public class CreateAccountActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btnBack);
         ImageView btnToggle = findViewById(R.id.btnTogglePassword);
         MaterialButton btnCreate = findViewById(R.id.btnCreateAccount);
-        TextView tvLogin = findViewById(R.id.tvLogin);
-
-        etFullName.setHintTextColor(Color.parseColor("#475569"));
-        etEmail.setHintTextColor(Color.parseColor("#475569"));
-        etPassword.setHintTextColor(Color.parseColor("#475569"));
 
         btnBack.setOnClickListener(v -> finish());
 
-        // Show / Hide password
         btnToggle.setOnClickListener(v -> {
             if (passwordVisible) {
                 etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                passwordVisible = false;
             } else {
                 etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-                passwordVisible = true;
             }
-            etPassword.setSelection(etPassword.length());
+            passwordVisible = !passwordVisible;
+            etPassword.setSelection(etPassword.length()); // ✅ fix cursor
         });
-
 
         btnCreate.setOnClickListener(v -> {
 
@@ -67,9 +55,8 @@ public class CreateAccountActivity extends AppCompatActivity {
             String email = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
-
             if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -78,7 +65,6 @@ public class CreateAccountActivity extends AppCompatActivity {
                 return;
             }
 
-
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
 
@@ -86,54 +72,53 @@ public class CreateAccountActivity extends AppCompatActivity {
 
                             FirebaseUser user = mAuth.getCurrentUser();
 
-
-                            if (user == null) {
-                                Toast.makeText(this, "User creation failed", Toast.LENGTH_SHORT).show();
-                                return;
+                            if (user != null) {
+                                sendToServer(user.getUid(), username, email);
                             }
-
-
-                            FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("username", username);
-                            map.put("email", email);
-
-                            db.collection("users")
-                                    .document(user.getUid())
-                                    .set(map)
-                                    .addOnSuccessListener(aVoid -> {
-
-                                        Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
-
-
-                                        Intent intent = new Intent(CreateAccountActivity.this, ExamSelectionActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                                    });
 
                         } else {
-
-                            //  Better error handling
-                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                Toast.makeText(this, "Email already registered", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(this,
-                                        "Error: " + task.getException().getMessage(),
-                                        Toast.LENGTH_LONG).show();
-                            }
+                            Toast.makeText(this,
+                                    task.getException() != null ? task.getException().getMessage() : "Error",
+                                    Toast.LENGTH_LONG).show();
                         }
                     });
         });
+    }
+
+    private void sendToServer(String uid, String username, String email) {
+
+        String url = "http://10.7.28.203:3000/register";
+
+        JSONObject json = new JSONObject();
+
+        try {
+            json.put("uid", uid);
+            json.put("username", username);
+            json.put("email", email);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                json,
+                response -> {
+                    Toast.makeText(this,
+                            response.optString("message"),
+                            Toast.LENGTH_LONG).show();
 
 
-        tvLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(CreateAccountActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-        });
+                    startActivity(new Intent(this, ExamSelectionActivity.class));
+                    finish();
+                },
+                error -> {
+                    Toast.makeText(this,
+                            "Network Error: " + error.toString(),
+                            Toast.LENGTH_LONG).show();
+                }
+        );
+
+        requestQueue.add(request); // ✅ use same queue
     }
 }
