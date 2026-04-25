@@ -6,19 +6,20 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.*;
+import com.android.volley.toolbox.*;
 import com.google.android.material.button.MaterialButton;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+
+import org.json.JSONObject;
+
+import java.util.*;
 
 public class SubjectDateSetupActivity extends AppCompatActivity implements SubjectAdapter.OnSubjectClickListener {
 
@@ -27,6 +28,9 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
     private TextView tvSubjectsReady;
     private RecyclerView rvSubjects;
     private String selectedExam;
+    private RequestQueue queue;
+
+    private final String BASE_URL = "http://10.7.28.203:3000/api/subjects";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,44 +39,92 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
 
         selectedExam = getIntent().getStringExtra("selectedExam");
 
-        ImageView btnBack = findViewById(R.id.btnBack);
         rvSubjects = findViewById(R.id.rvSubjects);
         tvSubjectsReady = findViewById(R.id.tvSubjectsReady);
         View btnAddSubject = findViewById(R.id.btnAddSubject);
         MaterialButton btnSaveContinue = findViewById(R.id.btnSaveContinue);
 
-        btnBack.setOnClickListener(v -> finish());
+        queue = Volley.newRequestQueue(this);
 
         subjectList = new ArrayList<>();
-        subjectList.add(new Subject("Advanced Mathematics", "Set your exam date", true));
-        subjectList.add(new Subject("Quantum Physics", "Set your exam date", true));
-
         adapter = new SubjectAdapter(subjectList, this);
         rvSubjects.setLayoutManager(new LinearLayoutManager(this));
         rvSubjects.setAdapter(adapter);
+
+        //  Load subjects from DB
+        fetchSubjects();
 
         btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
         btnSaveContinue.setOnClickListener(v -> {
             ArrayList<Subject> selectedSubjects = new ArrayList<>();
             for (Subject s : subjectList) {
-                if (s.isSelected()) {
-                    selectedSubjects.add(s);
-                }
+                if (s.isSelected()) selectedSubjects.add(s);
             }
 
             if (selectedSubjects.isEmpty()) {
-                Toast.makeText(this, "Please select at least one subject", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Select at least one subject", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            Intent intent = new Intent(SubjectDateSetupActivity.this, SubjectAssessmentActivity.class);
+            Intent intent = new Intent(this, SubjectAssessmentActivity.class);
             intent.putExtra("selectedSubjects", selectedSubjects);
             intent.putExtra("selectedExam", selectedExam);
             startActivity(intent);
         });
 
         updateUI();
+    }
+
+    //  FETCH SUBJECTS
+    private void fetchSubjects() {
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                BASE_URL,
+                null,
+                response -> {
+                    subjectList.clear();
+
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject obj = response.getJSONObject(i);
+                            subjectList.add(new Subject(obj.getString("name"), "Set your exam date", true));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    adapter.notifyDataSetChanged();
+                },
+                error -> Toast.makeText(this, "Fetch error: " + error.toString(), Toast.LENGTH_LONG).show()
+        );
+
+        queue.add(request);
+    }
+
+    // ADD SUBJECT TO DB + REFRESH
+    private void addSubjectToDB(String name) {
+
+        try {
+            JSONObject body = new JSONObject();
+            body.put("name", name);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    BASE_URL + "/add",
+                    body,
+                    response -> {
+                        Toast.makeText(this, "Added to DB", Toast.LENGTH_SHORT).show();
+                        fetchSubjects(); // 🔥 refresh list
+                    },
+                    error -> Toast.makeText(this, "Add error: " + error.toString(), Toast.LENGTH_LONG).show()
+            );
+
+            queue.add(request);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void showAddSubjectDialog() {
@@ -87,10 +139,9 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
 
         btnAdd.setOnClickListener(v -> {
             String name = etSubjectName.getText().toString().trim();
+
             if (!TextUtils.isEmpty(name)) {
-                subjectList.add(new Subject(name, "Set your exam date", true));
-                adapter.notifyItemInserted(subjectList.size() - 1);
-                updateUI();
+                addSubjectToDB(name); // 🔥 SAVE TO DATABASE
                 dialog.dismiss();
             } else {
                 Toast.makeText(this, "Enter subject name", Toast.LENGTH_SHORT).show();
@@ -110,35 +161,27 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
 
     @Override
     public void onCalendarClick(int position) {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        Calendar c = Calendar.getInstance();
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
-            String date = dayOfMonth + "/" + (month1 + 1) + "/" + year1;
+        new DatePickerDialog(this, (view, y, m, d) -> {
+            String date = d + "/" + (m + 1) + "/" + y;
             subjectList.get(position).setExamDate(date);
             subjectList.get(position).setSelected(true);
             adapter.notifyItemChanged(position);
             updateUI();
-        }, year, month, day);
-
-        datePickerDialog.show();
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
     }
 
     @Override
     public void onDeleteClick(int position) {
         subjectList.remove(position);
         adapter.notifyItemRemoved(position);
-        adapter.notifyItemRangeChanged(position, subjectList.size());
         updateUI();
     }
 
     private void updateUI() {
         int count = 0;
-        for (Subject s : subjectList) {
-            if (s.isSelected()) count++;
-        }
+        for (Subject s : subjectList) if (s.isSelected()) count++;
         tvSubjectsReady.setText(count + " subject" + (count == 1 ? "" : "s") + " ready");
     }
 }
