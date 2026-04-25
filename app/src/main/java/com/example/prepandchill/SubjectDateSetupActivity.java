@@ -76,7 +76,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         updateUI();
     }
 
-    //  FETCH SUBJECTS
+
     private void fetchSubjects() {
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
