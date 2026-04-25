@@ -152,7 +152,6 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-
     private void sendToServer(String uid, String username, String email) {
 
         String url = "http://10.7.28.203:3000/api/auth/register";

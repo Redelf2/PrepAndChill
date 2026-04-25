@@ -50,9 +50,12 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         adapter = new SubjectAdapter(subjectList, this);
         rvSubjects.setLayoutManager(new LinearLayoutManager(this));
         rvSubjects.setAdapter(adapter);
+        
+        // Ensure RecyclerView doesn't conflict with ScrollView
+        rvSubjects.setNestedScrollingEnabled(false);
 
         //  Load subjects from DB
-        fetchSubjects();
+        fetchSubjects(false);
 
         btnAddSubject.setOnClickListener(v -> showAddSubjectDialog());
 
@@ -73,16 +76,26 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
             startActivity(intent);
         });
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        
         updateUI();
     }
 
 
-    private void fetchSubjects() {
+    private void fetchSubjects(boolean keepScrollPosition) {
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 BASE_URL,
                 null,
                 response -> {
+                    // Preserve current scroll position so items don't "disappear" from view on refresh.
+                    int firstVisible = -1;
+                    RecyclerView.LayoutManager lm = rvSubjects.getLayoutManager();
+                    if (keepScrollPosition && lm instanceof LinearLayoutManager) {
+                        firstVisible = ((LinearLayoutManager) lm).findFirstVisibleItemPosition();
+                    }
+                    final int firstVisibleFinal = firstVisible;
+
                     subjectList.clear();
 
                     for (int i = 0; i < response.length(); i++) {
@@ -94,7 +107,17 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
                         }
                     }
 
-                    adapter.notifyDataSetChanged();
+                    // If RecyclerView is inside a ScrollView, data changes don't always trigger a re-measure.
+                    // Posting ensures we re-layout on the UI thread after adapter updates.
+                    rvSubjects.post(() -> {
+                        adapter.notifyDataSetChanged();
+                        rvSubjects.requestLayout();
+                        rvSubjects.invalidate();
+                        if (keepScrollPosition && firstVisibleFinal >= 0) {
+                            rvSubjects.scrollToPosition(firstVisibleFinal);
+                        }
+                        updateUI();
+                    });
                 },
                 error -> Toast.makeText(this, "Fetch error: " + error.toString(), Toast.LENGTH_LONG).show()
         );
@@ -115,7 +138,15 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
                     body,
                     response -> {
                         Toast.makeText(this, "Added to DB", Toast.LENGTH_SHORT).show();
-                        fetchSubjects(); // 🔥 refresh list
+                        // Append locally so the list keeps stacking without jumping.
+                        rvSubjects.post(() -> {
+                            int insertAt = subjectList.size();
+                            subjectList.add(new Subject(name, "Set your exam date", true));
+                            adapter.notifyItemInserted(insertAt);
+                            rvSubjects.requestLayout();
+                            rvSubjects.invalidate();
+                            updateUI();
+                        });
                     },
                     error -> Toast.makeText(this, "Add error: " + error.toString(), Toast.LENGTH_LONG).show()
             );
@@ -151,32 +182,45 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         dialog.show();
     }
 
+    // Backwards-compatible call site (if you later add more callers).
+    private void fetchSubjects() {
+        fetchSubjects(false);
+    }
+
     @Override
     public void onSubjectClick(int position) {
-        Subject subject = subjectList.get(position);
-        subject.setSelected(!subject.isSelected());
-        adapter.notifyItemChanged(position);
-        updateUI();
+        if (position >= 0 && position < subjectList.size()) {
+            Subject subject = subjectList.get(position);
+            subject.setSelected(!subject.isSelected());
+            adapter.notifyItemChanged(position);
+            updateUI();
+        }
     }
 
     @Override
     public void onCalendarClick(int position) {
-        Calendar c = Calendar.getInstance();
+        if (position >= 0 && position < subjectList.size()) {
+            Calendar c = Calendar.getInstance();
 
-        new DatePickerDialog(this, (view, y, m, d) -> {
-            String date = d + "/" + (m + 1) + "/" + y;
-            subjectList.get(position).setExamDate(date);
-            subjectList.get(position).setSelected(true);
-            adapter.notifyItemChanged(position);
-            updateUI();
-        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+            new DatePickerDialog(this, (view, y, m, d) -> {
+                String date = d + "/" + (m + 1) + "/" + y;
+                subjectList.get(position).setExamDate(date);
+                subjectList.get(position).setSelected(true);
+                adapter.notifyItemChanged(position);
+                updateUI();
+            }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+        }
     }
 
     @Override
     public void onDeleteClick(int position) {
-        subjectList.remove(position);
-        adapter.notifyItemRemoved(position);
-        updateUI();
+        if (position >= 0 && position < subjectList.size()) {
+            subjectList.remove(position);
+            adapter.notifyItemRemoved(position);
+            // After removing, update positions of remaining items to avoid index issues
+            adapter.notifyItemRangeChanged(position, subjectList.size());
+            updateUI();
+        }
     }
 
     private void updateUI() {
