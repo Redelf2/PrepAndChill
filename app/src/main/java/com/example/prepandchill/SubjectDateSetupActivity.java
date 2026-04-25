@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.*;
 import com.android.volley.toolbox.*;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import org.json.JSONObject;
 
@@ -31,6 +33,9 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
     private RequestQueue queue;
 
     private final String BASE_URL = "http://10.7.28.203:3000/api/subjects";
+    private String firebaseUid;
+    private String firebaseEmail;
+    private String firebaseUsername;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +50,11 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         MaterialButton btnSaveContinue = findViewById(R.id.btnSaveContinue);
 
         queue = Volley.newRequestQueue(this);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        firebaseUid = (user != null) ? user.getUid() : null;
+        firebaseEmail = (user != null) ? user.getEmail() : null;
+        firebaseUsername = (user != null) ? user.getDisplayName() : null;
 
         subjectList = new ArrayList<>();
         adapter = new SubjectAdapter(subjectList, this);
@@ -78,9 +88,14 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
 
 
     private void fetchSubjects() {
+        if (firebaseUid == null) {
+            Toast.makeText(this, "Please login again (missing user).", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
-                BASE_URL,
+                BASE_URL + "?firebase_uid=" + firebaseUid,
                 null,
                 response -> {
                     subjectList.clear();
@@ -106,16 +121,24 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
     private void addSubjectToDB(String name) {
 
         try {
+            if (firebaseUid == null) {
+                Toast.makeText(this, "Please login again (missing user).", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             JSONObject body = new JSONObject();
             body.put("name", name);
+            body.put("firebase_uid", firebaseUid);
+            if (firebaseEmail != null) body.put("email", firebaseEmail);
+            if (firebaseUsername != null) body.put("username", firebaseUsername);
 
             JsonObjectRequest request = new JsonObjectRequest(
                     Request.Method.POST,
                     BASE_URL + "/add",
                     body,
                     response -> {
-                        Toast.makeText(this, "Added to DB", Toast.LENGTH_SHORT).show();
-                        fetchSubjects(); // 🔥 refresh list
+                        Toast.makeText(this, response.optString("message", "Saved"), Toast.LENGTH_SHORT).show();
+                        fetchSubjects(); // refresh list
                     },
                     error -> Toast.makeText(this, "Add error: " + error.toString(), Toast.LENGTH_LONG).show()
             );
