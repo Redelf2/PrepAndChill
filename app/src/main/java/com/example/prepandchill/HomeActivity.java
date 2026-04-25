@@ -3,9 +3,11 @@ package com.example.prepandchill;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,7 +18,12 @@ public class HomeActivity extends AppCompatActivity {
 
     private ArrayList<Subject> selectedSubjects;
     private RecyclerView rvTodayPlan;
+    private RecyclerView rvTaskAgent;
     private HomeSubjectAdapter adapter;
+    private TaskAgentAdapter taskAgentAdapter;
+    private ArrayList<TaskItem> taskAgentTasks;
+    private EditText etAiCommand;
+    private MaterialButton btnAiSend;
     private String selectedExamName;
 
     @Override
@@ -31,7 +38,10 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         rvTodayPlan = findViewById(R.id.rvTodayPlan);
-        
+        rvTaskAgent = findViewById(R.id.rvTaskAgent);
+        etAiCommand = findViewById(R.id.etAiCommand);
+        btnAiSend = findViewById(R.id.btnAiSend);
+
         Intent intent = getIntent();
         selectedSubjects = (ArrayList<Subject>) intent.getSerializableExtra("selectedSubjects");
         selectedExamName = intent.getStringExtra("selectedExam");
@@ -40,12 +50,20 @@ public class HomeActivity extends AppCompatActivity {
             selectedSubjects = new ArrayList<>();
         }
 
+        taskAgentTasks = new ArrayList<>();
+        taskAgentAdapter = new TaskAgentAdapter(taskAgentTasks);
+
         updateDynamicUI();
 
         adapter = new HomeSubjectAdapter(selectedSubjects);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvTodayPlan.setLayoutManager(layoutManager);
         rvTodayPlan.setAdapter(adapter);
+
+        rvTaskAgent.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        rvTaskAgent.setAdapter(taskAgentAdapter);
+
+        btnAiSend.setOnClickListener(v -> submitAiCommand());
 
         TextView btnViewAll = findViewById(R.id.btnViewAll);
         if (btnViewAll != null) {
@@ -74,6 +92,44 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(dIntent);
             });
         }
+    }
+
+    private void submitAiCommand() {
+        String command = etAiCommand.getText().toString().trim();
+        if (command.isEmpty()) {
+            showToast("Please enter a task command.");
+            return;
+        }
+
+        btnAiSend.setEnabled(false);
+        TaskAgentApiClient.sendTaskAgentCommand(command, new TaskAgentApiClient.TaskAgentCallback() {
+            @Override
+            public void onSuccess(TaskAgentResponse taskAgentResponse) {
+                runOnUiThread(() -> {
+                    btnAiSend.setEnabled(true);
+                    if ("add_tasks".equals(taskAgentResponse.getAction()) && !taskAgentResponse.getTasks().isEmpty()) {
+                        int startPosition = taskAgentTasks.size();
+                        taskAgentTasks.addAll(taskAgentResponse.getTasks());
+                        taskAgentAdapter.notifyItemRangeInserted(startPosition, taskAgentResponse.getTasks().size());
+                        etAiCommand.setText("");
+                    } else {
+                        showToast("AI returned no tasks or invalid action.");
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                runOnUiThread(() -> {
+                    btnAiSend.setEnabled(true);
+                    showToast(errorMessage);
+                });
+            }
+        });
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(HomeActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void updateDynamicUI() {

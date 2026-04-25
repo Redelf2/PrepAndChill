@@ -1,7 +1,6 @@
 plugins {
    alias(libs.plugins.android.application)
-    id("com.google.gms.google-services")
-
+   // id("com.google.gms.google-services")
 }
 
 android {
@@ -58,5 +57,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation("com.android.volley:volley:1.2.1")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
 }
