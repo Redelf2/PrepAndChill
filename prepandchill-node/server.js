@@ -1,21 +1,29 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// Import Routes
+const authRoutes = require("./Routes/authRoutes");
+const subjectRoutes = require("./Routes/subjectRoutes");
+const planRoutes = require("./Routes/planRoutes");
 
-// Note: folder name is `Routes` in this repo (Windows is case-insensitive, Linux isn't)
-app.use("/api/auth", require("./Routes/authRoutes"));
-app.use("/api/subjects", require("./Routes/subjectRoutes"));
+// Mount Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/subjects", subjectRoutes);
+app.use("/api/plan", planRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Server running");
+    res.send("PrepAndChill Backend Server is Running");
 });
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+const PORT = 3000;
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server started on http://localhost:${PORT}`);
+    console.log(`Test Subjects: http://localhost:${PORT}/api/subjects?firebase_uid=8eNRvziInvhbXukRy5ZsazONBmx2`);
+    console.log(`Test Topics: http://localhost:${PORT}/api/subjects/topics?name=DBMS`);
 });

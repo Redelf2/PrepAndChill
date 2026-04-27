@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
     }
 
     const sql = `
-        SELECT s.id, s.name, us.exam_date, us.confidence, us.difficulty
+        SELECT s.id, s.name, us.exam_date, us.confidence
         FROM user_subjects us
         JOIN subjects s ON s.id = us.subject_id
         JOIN users u ON u.id = us.user_id
@@ -127,8 +127,8 @@ router.post("/add", (req, res) => {
 
                                     // 5) Map user -> subject (per-user storage)
                                     db.query(
-                                        "INSERT IGNORE INTO user_subjects (user_id, subject_id, difficulty) VALUES (?, ?, ?)",
-                                        [userId, subjectId, 2],
+                                        "INSERT IGNORE INTO user_subjects (user_id, subject_id) VALUES (?, ?)",
+                                        [userId, subjectId],
                                         (err, mapResult) => {
                                             if (err) {
                                                 console.log(err);
@@ -174,47 +174,25 @@ router.post("/updateConfidence", (req, res) => {
     });
 });
 
-router.post("/updateDifficulty", (req, res) => {
-    const { firebase_uid, subject_name, difficulty } = req.body;
-    if (!firebase_uid || !subject_name || difficulty === undefined) {
-        return res.status(400).json({ error: "firebase_uid, subject_name, difficulty are required" });
-    }
-    const d = Number.parseInt(difficulty, 10);
-    if (Number.isNaN(d) || d < 1 || d > 3) {
-        return res.status(400).json({ error: "difficulty must be 1-3" });
-    }
-    const sql = `
-        UPDATE user_subjects us
-        JOIN users u ON u.id = us.user_id
-        JOIN subjects s ON s.id = us.subject_id
-        SET us.difficulty = ?
-        WHERE u.firebase_uid = ? AND s.name = ?
-    `;
-    db.query(sql, [d, firebase_uid, subject_name], (err, result) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ error: "DB error" });
-        }
-        res.json({ message: "Difficulty updated" });
-    });
-});
-
 router.get("/topics", (req, res) => {
     const { name, firebase_uid } = req.query;
-    if (!name || !firebase_uid) return res.status(400).json({ error: "name and firebase_uid are required" });
+    if (!name) return res.status(400).json({ error: "Subject name is required" });
 
+    // Use a cleaner query that doesn't rely on the user existing in the user_topics table yet
     const sql = `
-        SELECT t.id, t.topic_name, IF(ut.is_completed, 1, 0) as is_completed
+        SELECT t.id, t.topic_name,
+        COALESCE((SELECT ut.is_completed FROM user_topics ut
+                  JOIN users u ON u.id = ut.user_id
+                  WHERE ut.topic_id = t.id AND u.firebase_uid = ? LIMIT 1), 0) as is_completed
         FROM topics t
         JOIN subjects s ON s.id = t.subject_id
-        JOIN users u ON u.firebase_uid = ?
-        LEFT JOIN user_topics ut ON ut.topic_id = t.id AND ut.user_id = u.id
         WHERE s.name = ?
     `;
-    db.query(sql, [firebase_uid, name], (err, result) => {
+
+    db.query(sql, [firebase_uid || '', name], (err, result) => {
         if (err) {
-            console.log(err);
-            return res.status(500).json({ error: "DB error" });
+            console.error("Error fetching topics:", err);
+            return res.status(500).json({ error: "DB error fetching topics" });
         }
         res.json(result);
     });
@@ -225,8 +203,10 @@ router.post("/updateTopicProgress", (req, res) => {
     if (!firebase_uid || !topic_id) return res.status(400).json({ error: "Missing fields" });
 
     db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
-        if (err) return res.status(500).json({ error: "DB error" });
-        if (!userRows.length) return res.status(404).json({ error: "User not found" });
+        if (err || !userRows.length) {
+             console.error("User not found for topic progress update");
+             return res.status(500).json({ error: "User not found" });
+        }
         const userId = userRows[0].id;
 
         const sql = `
