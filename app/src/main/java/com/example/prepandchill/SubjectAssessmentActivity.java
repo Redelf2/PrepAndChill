@@ -38,7 +38,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
 
     // TODO: Update this to your computer's CURRENT IPv4 address (found via 'ipconfig')
     private final String BASE_IP = "10.7.28.203"; 
-    private final String SUBJECTS_BASE_URL = "http://" + BASE_IP + ":3000/api/subjects";
+    private final String SUBJECTS_BASE_URL =   "http://" + BASE_IP + ":3000/api/subjects";;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,10 +118,12 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     }
 
     private void fetchTopicsForSubject(String subjectName, LinearLayout topicsContainer) {
+
         String encodedName = Uri.encode(subjectName);
         String encodedUid = Uri.encode(firebaseUid != null ? firebaseUid : "");
-        
+
         String url = SUBJECTS_BASE_URL + "/topics?name=" + encodedName + "&firebase_uid=" + encodedUid;
+
         Log.d(TAG, "Fetching topics from: " + url);
 
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -130,12 +132,21 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                         showNoTopicsMsg(topicsContainer);
                         return;
                     }
+
                     for (int i = 0; i < response.length(); i++) {
                         try {
                             JSONObject topicObj = response.getJSONObject(i);
-                            addTopicCheckBox(topicObj.getInt("id"), topicObj.getString("topic_name"), 
-                                             topicObj.optInt("is_completed", 0) == 1, topicsContainer);
-                        } catch (Exception e) { Log.e(TAG, "JSON Error", e); }
+
+                            addTopicCheckBox(
+                                    topicObj.getInt("id"),
+                                    topicObj.getString("topic_name"),
+                                    topicObj.optInt("is_completed", 0) == 1,
+                                    topicsContainer
+                            );
+
+                        } catch (Exception e) {
+                            Log.e(TAG, "JSON Error", e);
+                        }
                     }
                 },
                 error -> {
@@ -143,11 +154,15 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                     if (error.networkResponse != null) {
                         errorType = "Server Error: " + error.networkResponse.statusCode;
                     }
-                    // This will show exactly what IP it's failing to connect to
-                    Toast.makeText(this, errorType + "\nTarget: " + BASE_IP + ":3000", Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(this,
+                            errorType + "\nTarget: " + BASE_IP + ":3000",
+                            Toast.LENGTH_LONG).show();
+
                     Log.e(TAG, "Volley Error: " + error.toString());
                 }
         );
+
         queue.add(request);
     }
 

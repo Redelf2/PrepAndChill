@@ -13,12 +13,12 @@ app.use((req, res, next) => {
     next();
 });
 
-// Import Routes
+
 const authRoutes = require("./Routes/authRoutes");
 const subjectRoutes = require("./Routes/subjectRoutes");
 const planRoutes = require("./Routes/planRoutes");
 
-// Mount Routes
+
 app.use("/api/auth", authRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/plan", planRoutes);
