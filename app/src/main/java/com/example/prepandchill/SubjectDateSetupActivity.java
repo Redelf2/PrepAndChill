@@ -60,7 +60,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         adapter = new SubjectAdapter(subjectList, this);
         rvSubjects.setLayoutManager(new LinearLayoutManager(this));
         rvSubjects.setAdapter(adapter);
-
+        rvSubjects.setNestedScrollingEnabled(false);
         //  Load subjects from DB
         fetchSubjects();
 
