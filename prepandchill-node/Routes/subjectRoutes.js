@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
     }
 
     const sql = `
-        SELECT s.id, s.name
+        SELECT s.id, s.name, us.exam_date
         FROM user_subjects us
         JOIN subjects s ON s.id = us.subject_id
         JOIN users u ON u.id = us.user_id
@@ -25,6 +25,40 @@ router.get("/", (req, res) => {
             return res.json({ error: "DB error" });
         }
         res.json(result);
+    });
+});
+
+router.post("/updateExamDate", (req, res) => {
+    const { firebase_uid, subject_name, exam_date } = req.body;
+
+    if (!firebase_uid || !subject_name || !exam_date) {
+        return res.status(400).json({ error: "firebase_uid, subject_name, exam_date are required" });
+    }
+
+    // Basic validation: YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(exam_date)) {
+        return res.status(400).json({ error: "exam_date must be YYYY-MM-DD" });
+    }
+
+    const sql = `
+        UPDATE user_subjects us
+        JOIN users u ON u.id = us.user_id
+        JOIN subjects s ON s.id = us.subject_id
+        SET us.exam_date = ?
+        WHERE u.firebase_uid = ? AND s.name = ?
+    `;
+
+    db.query(sql, [exam_date, firebase_uid, subject_name], (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: "DB error (update exam_date)" });
+        }
+
+        if (!result || result.affectedRows === 0) {
+            return res.status(404).json({ error: "Subject mapping not found for this user" });
+        }
+
+        res.json({ message: "Exam date updated", affected_rows: result.affectedRows });
     });
 });
 

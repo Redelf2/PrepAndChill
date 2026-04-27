@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.Locale;
 
 public class SubjectDateSetupActivity extends AppCompatActivity implements SubjectAdapter.OnSubjectClickListener {
 
@@ -103,7 +104,11 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
                     for (int i = 0; i < response.length(); i++) {
                         try {
                             JSONObject obj = response.getJSONObject(i);
-                            subjectList.add(new Subject(obj.getString("name"), "Set your exam date", true));
+                            String examDate = obj.optString("exam_date", "");
+                            if (examDate == null || examDate.equals("null") || examDate.isEmpty()) {
+                                examDate = "Set your exam date";
+                            }
+                            subjectList.add(new Subject(obj.getString("name"), examDate, true));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -164,7 +169,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
             String name = etSubjectName.getText().toString().trim();
 
             if (!TextUtils.isEmpty(name)) {
-                addSubjectToDB(name); // 🔥 SAVE TO DATABASE
+                addSubjectToDB(name); //  SAVE TO DATABASE
                 dialog.dismiss();
             } else {
                 Toast.makeText(this, "Enter subject name", Toast.LENGTH_SHORT).show();
@@ -187,12 +192,41 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         Calendar c = Calendar.getInstance();
 
         new DatePickerDialog(this, (view, y, m, d) -> {
-            String date = d + "/" + (m + 1) + "/" + y;
-            subjectList.get(position).setExamDate(date);
+            // Save in DB format: YYYY-MM-DD
+            String dbDate = String.format(Locale.US, "%04d-%02d-%02d", y, (m + 1), d);
+            subjectList.get(position).setExamDate(dbDate);
             subjectList.get(position).setSelected(true);
             adapter.notifyItemChanged(position);
             updateUI();
+
+            saveExamDateToDB(subjectList.get(position).getName(), dbDate);
         }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+    }
+
+    private void saveExamDateToDB(String subjectName, String examDate) {
+        if (firebaseUid == null) {
+            Toast.makeText(this, "Please login again (missing user).", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            JSONObject body = new JSONObject();
+            body.put("firebase_uid", firebaseUid);
+            body.put("subject_name", subjectName);
+            body.put("exam_date", examDate);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    BASE_URL + "/updateExamDate",
+                    body,
+                    response -> Toast.makeText(this, response.optString("message", "Exam date saved"), Toast.LENGTH_SHORT).show(),
+                    error -> Toast.makeText(this, "Save date error: " + error.toString(), Toast.LENGTH_LONG).show()
+            );
+
+            queue.add(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
