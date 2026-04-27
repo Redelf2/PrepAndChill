@@ -36,6 +36,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     private RequestQueue queue;
     private String firebaseUid;
 
+    // TODO: Update this to your computer's CURRENT IPv4 address (found via 'ipconfig')
     private final String BASE_IP = "10.7.28.203"; 
     private final String SUBJECTS_BASE_URL = "http://" + BASE_IP + ":3000/api/subjects";
 
@@ -117,7 +118,6 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     }
 
     private void fetchTopicsForSubject(String subjectName, LinearLayout topicsContainer) {
-        // Encode parameters to handle spaces and special characters
         String encodedName = Uri.encode(subjectName);
         String encodedUid = Uri.encode(firebaseUid != null ? firebaseUid : "");
         
@@ -139,11 +139,13 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    Log.e(TAG, "Volley Error: " + error.toString());
+                    String errorType = "Connection Error";
                     if (error.networkResponse != null) {
-                        Log.e(TAG, "Status Code: " + error.networkResponse.statusCode);
+                        errorType = "Server Error: " + error.networkResponse.statusCode;
                     }
-                    Toast.makeText(this, "Error loading syllabus. Check connection.", Toast.LENGTH_SHORT).show();
+                    // This will show exactly what IP it's failing to connect to
+                    Toast.makeText(this, errorType + "\nTarget: " + BASE_IP + ":3000", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Volley Error: " + error.toString());
                 }
         );
         queue.add(request);
@@ -204,7 +206,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 },
-                error -> Toast.makeText(this, "Failed to generate plan.", Toast.LENGTH_SHORT).show()
+                error -> Toast.makeText(this, "Failed to reach server for plan generation.", Toast.LENGTH_SHORT).show()
             ));
         } catch (Exception e) { e.printStackTrace(); }
     }
