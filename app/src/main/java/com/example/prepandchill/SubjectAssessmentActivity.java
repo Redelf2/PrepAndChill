@@ -1,16 +1,31 @@
 package com.example.prepandchill;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.nio.charset.Charset;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 public class SubjectAssessmentActivity extends AppCompatActivity {
@@ -18,6 +33,12 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     private LinearLayout container;
     private ArrayList<Subject> selectedSubjects;
     private String selectedExam;
+    private RequestQueue queue;
+    private String firebaseUid;
+
+
+    private final String BASE_IP = "10.7.28.203"; 
+    private final String SUBJECTS_BASE_URL = "http://" + BASE_IP + ":3000/api/subjects";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +50,10 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         container = findViewById(R.id.llAssessmentContainer);
         ImageView btnBack = findViewById(R.id.btnBack);
         MaterialButton btnGenerate = findViewById(R.id.btnGenerate);
+
+        queue = Volley.newRequestQueue(this);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        firebaseUid = (user != null) ? user.getUid() : null;
 
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
@@ -44,12 +69,13 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
 
         if (btnGenerate != null) {
             btnGenerate.setOnClickListener(v -> {
+                if (firebaseUid == null) {
+                    Toast.makeText(this, "Please login again (missing user).", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 Toast.makeText(this, "Generating your personalized study plan...", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
-                intent.putExtra("selectedSubjects", selectedSubjects);
-                intent.putExtra("selectedExam", selectedExam);
-                startActivity(intent);
-                finish();
+                generatePlanFromServer(6);
             });
         }
     }
@@ -63,6 +89,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         TextView tvName = cardView.findViewById(R.id.tvSubjectName);
         SeekBar seekBar = cardView.findViewById(R.id.seekBarProficiency);
         TextView tvPercent = cardView.findViewById(R.id.tvPercent);
+        LinearLayout topicsContainer = cardView.findViewById(R.id.llTopicsContainer);
 
         if (tvName != null) tvName.setText(subject.getName());
 
@@ -74,25 +101,191 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                 } else {
                     details.setVisibility(View.VISIBLE);
                     arrow.setRotation(0);
+                    // Fetch topics only when the card is expanded for the first time
+                    if (topicsContainer != null && topicsContainer.getChildCount() == 0) {
+                        fetchTopicsForSubject(subject.getName(), topicsContainer);
+                    }
                 }
             });
         }
 
         if (seekBar != null && tvPercent != null) {
             seekBar.setProgress(subject.getProficiency());
-            tvPercent.setText(subject.getProficiency() + "%");
+            tvPercent.setText(String.format("%d%%", subject.getProficiency()));
             
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    tvPercent.setText(progress + "%");
+                    tvPercent.setText(String.format("%d%%", progress));
                     subject.setProficiency(progress);
                 }
                 @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    saveConfidenceToDB(subject.getName(), subject.getProficiency());
+                }
             });
         }
 
         container.addView(cardView);
+    }
+
+    private void fetchTopicsForSubject(String subjectName, LinearLayout topicsContainer) {
+        String encodedName;
+        try {
+            encodedName = URLEncoder.encode(subjectName, "UTF-8");
+        } catch (Exception e) {
+            encodedName = subjectName;
+        }
+        String url = SUBJECTS_BASE_URL + "/topics?name=" + encodedName + "&firebase_uid=" + firebaseUid;
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    if (response.length() == 0) {
+                        TextView tvNoTopics = new TextView(this);
+                        tvNoTopics.setText("No predefined syllabus found for this subject.");
+                        tvNoTopics.setTextColor(Color.parseColor("#64748B"));
+                        tvNoTopics.setTextSize(12);
+                        topicsContainer.addView(tvNoTopics);
+                        return;
+                    }
+
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject topicObj = response.getJSONObject(i);
+                            int topicId = topicObj.getInt("id");
+                            String topicName = topicObj.getString("topic_name");
+                            boolean isCompleted = topicObj.optInt("is_completed", 0) == 1;
+                            
+                            addTopicCheckBox(topicId, topicName, isCompleted, topicsContainer);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                error -> {
+                    TextView tvError = new TextView(this);
+                    tvError.setText("Failed to load topics.");
+                    tvError.setTextColor(Color.RED);
+                    topicsContainer.addView(tvError);
+                }
+        );
+        queue.add(request);
+    }
+
+    private void addTopicCheckBox(int topicId, String topicName, boolean isCompleted, LinearLayout topicsContainer) {
+        CheckBox checkBox = new CheckBox(this);
+        checkBox.setText(topicName);
+        checkBox.setChecked(isCompleted);
+        checkBox.setTextColor(Color.parseColor("#F1F5F9"));
+        checkBox.setButtonTintList(ColorStateList.valueOf(Color.parseColor("#A855F7")));
+        checkBox.setTextSize(13);
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 8, 0, 8);
+        checkBox.setLayoutParams(params);
+
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> updateTopicProgress(topicId, isChecked));
+
+        topicsContainer.addView(checkBox);
+    }
+
+    private void updateTopicProgress(int topicId, boolean isCompleted) {
+        if (firebaseUid == null) return;
+
+        try {
+            JSONObject body = new JSONObject();
+            body.put("firebase_uid", firebaseUid);
+            body.put("topic_id", topicId);
+            body.put("is_completed", isCompleted);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    SUBJECTS_BASE_URL + "/updateTopicProgress",
+                    body,
+                    response -> { },
+                    error -> { }
+            );
+            queue.add(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveConfidenceToDB(String subjectName, int confidence) {
+        if (firebaseUid == null) return;
+
+        try {
+            JSONObject body = new JSONObject();
+            body.put("firebase_uid", firebaseUid);
+            body.put("subject_name", subjectName);
+            body.put("confidence", confidence);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    SUBJECTS_BASE_URL + "/updateConfidence",
+                    body,
+                    response -> { },
+                    error -> Toast.makeText(this, "Connection Error: Check Server IP", Toast.LENGTH_SHORT).show()
+            );
+
+            queue.add(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generatePlanFromServer(double totalDailyHours) {
+        String planUrl = "http://" + BASE_IP + ":3000/api/plan/generatePlan";
+        try {
+            JSONObject body = new JSONObject();
+            body.put("firebase_uid", firebaseUid);
+            body.put("total_daily_hours", totalDailyHours);
+
+            JsonObjectRequest request = new JsonObjectRequest(
+                    Request.Method.POST,
+                    planUrl,
+                    body,
+                    response -> {
+                        JSONArray plan = response.optJSONArray("plan");
+                        if (plan == null || plan.length() == 0) {
+                            Toast.makeText(this, "No subjects found to generate a plan.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        Intent intent = new Intent(SubjectAssessmentActivity.this, HomeActivity.class);
+                        intent.putExtra("selectedSubjects", selectedSubjects);
+                        intent.putExtra("selectedExam", selectedExam);
+                        intent.putExtra("generatedPlanJson", plan.toString());
+                        startActivity(intent);
+                        finish();
+                    },
+                    error -> {
+                        String serverMsg = null;
+                        if (error != null && error.networkResponse != null && error.networkResponse.data != null) {
+                            try {
+                                String charsetName = HttpHeaderParser.parseCharset(error.networkResponse.headers, "utf-8");
+                                serverMsg = new String(error.networkResponse.data, charsetName);
+                            } catch (Exception ignored) { }
+                        }
+
+                        if (serverMsg != null && !serverMsg.isEmpty()) {
+                            Toast.makeText(this, "Server Error: " + serverMsg, Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(this, "Network Error: Cannot reach " + BASE_IP, Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
+
+            queue.add(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
