@@ -11,50 +11,53 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="48dp"
-        android:paddingBottom="20dp"
+        android:paddingBottom="16dp"
         android:paddingHorizontal="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_home_card"
+            android:padding="10dp"
             android:src="@drawable/ic_back_arrow"
+            android:contentDescription="Back"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            app:tint="@color/accent_orange" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentEnd="true"
-            android:src="@drawable/ic_more_vert" />
-    </RelativeLayout>
-
-    <!-- Date Selector (generated dynamically) -->
-    <HorizontalScrollView
-        android:id="@+id/hsDateSelector"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:overScrollMode="never"
-        android:scrollbars="none"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="10dp"
-        app:layout_constraintTop_toBottomOf="@id/rlHeader">
-
-        <LinearLayout
-            android:id="@+id/llDateSelector"
+        <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical" />
-    </HorizontalScrollView>
+            android:layout_centerInParent="true"
+            android:text="Study Plan"
+            android:textColor="@color/text_white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/btnMore"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_home_card"
+            android:padding="10dp"
+            android:src="@drawable/ic_more_vert"
+            android:contentDescription="More" />
+    </RelativeLayout>
 
     <ScrollView
+        android:id="@+id/svBody"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/hsDateSelector">
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/hsDateSelector"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav">
 
+        <!-- Reuse the same body content structure from your timetable design -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -138,6 +141,7 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/btnReschedule"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_streak_card"
@@ -145,38 +149,26 @@
                     android:paddingVertical="8dp"
                     android:text="📅 RESCHEDULE"
                     android:textColor="@color/accent_orange"
-                    android:textSize="10sp" android:textStyle="bold" />
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true" />
             </LinearLayout>
 
-            <!-- Upcoming Sessions -->
-            <RelativeLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Upcoming Sessions"
-                    android:textColor="@color/text_white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:text="VIEW ALL"
-                    android:textColor="@color/accent_orange"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </RelativeLayout>
+                android:layout_marginTop="32dp"
+                android:text="Today's Study Plan"
+                android:textColor="@color/text_white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <LinearLayout
-                android:id="@+id/llUpcomingSessions"
+                android:id="@+id/llStudyPlan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical" />
 
             <View
@@ -186,4 +178,16 @@
         </LinearLayout>
     </ScrollView>
 
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/bg_black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:menu="@menu/menu_bottom_nav"
+        app:itemIconTint="@color/bottom_nav_item_colors"
+        app:itemTextColor="@color/bottom_nav_item_colors"
+        app:labelVisibilityMode="labeled" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
+

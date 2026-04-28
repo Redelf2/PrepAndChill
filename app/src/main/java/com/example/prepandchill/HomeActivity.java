@@ -12,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
+import org.json.JSONArray;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -25,6 +27,7 @@ public class HomeActivity extends AppCompatActivity {
     private EditText etAiCommand;
     private MaterialButton btnAiSend;
     private String selectedExamName;
+    private Map<String, String> subjectToDuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,7 @@ public class HomeActivity extends AppCompatActivity {
         Intent intent = getIntent();
         selectedSubjects = (ArrayList<Subject>) intent.getSerializableExtra("selectedSubjects");
         selectedExamName = intent.getStringExtra("selectedExam");
+        String generatedPlanJson = intent.getStringExtra("generatedPlanJson");
 
         if (selectedSubjects == null) {
             selectedSubjects = new ArrayList<>();
@@ -55,7 +59,19 @@ public class HomeActivity extends AppCompatActivity {
 
         updateDynamicUI();
 
-        adapter = new HomeSubjectAdapter(selectedSubjects);
+        if (generatedPlanJson != null && !generatedPlanJson.trim().isEmpty()) {
+            // Persist for Study/Timetable screens too.
+            try {
+                // Validate JSON early so we don't save garbage.
+                new JSONArray(generatedPlanJson);
+                PlanPrefs.savePlanJson(this, generatedPlanJson);
+            } catch (Exception ignored) {
+            }
+        }
+
+        subjectToDuration = PlanParser.subjectToDuration(PlanPrefs.readPlanJson(this));
+
+        adapter = new HomeSubjectAdapter(selectedSubjects, subjectToDuration);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvTodayPlan.setLayoutManager(layoutManager);
         rvTodayPlan.setAdapter(adapter);
@@ -70,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
             btnViewAll.setOnClickListener(v -> {
                 Intent tIntent = new Intent(HomeActivity.this, TimetableActivity.class);
                 tIntent.putExtra("selectedSubjects", selectedSubjects);
+                tIntent.putExtra("generatedPlanJson", PlanPrefs.readPlanJson(HomeActivity.this));
                 startActivity(tIntent);
             });
         }

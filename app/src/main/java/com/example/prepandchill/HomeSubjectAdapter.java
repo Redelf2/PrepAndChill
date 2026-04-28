@@ -7,13 +7,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
+import java.util.Map;
 
 public class HomeSubjectAdapter extends RecyclerView.Adapter<HomeSubjectAdapter.HomeSubjectViewHolder> {
 
     private List<Subject> subjectList;
+    private final Map<String, String> subjectToDuration;
 
     public HomeSubjectAdapter(List<Subject> subjectList) {
         this.subjectList = subjectList;
+        this.subjectToDuration = null;
+    }
+
+    public HomeSubjectAdapter(List<Subject> subjectList, Map<String, String> subjectToDuration) {
+        this.subjectList = subjectList;
+        this.subjectToDuration = subjectToDuration;
     }
 
     @NonNull
@@ -36,7 +44,14 @@ public class HomeSubjectAdapter extends RecyclerView.Adapter<HomeSubjectAdapter.
             holder.tvShortName.setText(fullName.toUpperCase());
         }
 
-        holder.tvTime.setText("2h 00m");
+        String duration = null;
+        if (subjectToDuration != null) {
+            duration = subjectToDuration.get(fullName);
+            if (duration == null) {
+                duration = subjectToDuration.get(fullName.trim());
+            }
+        }
+        holder.tvTime.setText(duration != null ? duration : "2h 00m");
     }
 
     @Override
