@@ -36,8 +36,13 @@ public class CreateAccountActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btnBack);
         ImageView btnToggle = findViewById(R.id.btnTogglePassword);
         MaterialButton btnCreate = findViewById(R.id.btnCreateAccount);
+        TextView tvLogin = findViewById(R.id.tvLogin);
 
         btnBack.setOnClickListener(v -> finish());
+
+        tvLogin.setOnClickListener(v -> {
+            startActivity(new Intent(CreateAccountActivity.this, LoginActivity.class));
+        });
 
         btnToggle.setOnClickListener(v -> {
             if (passwordVisible) {

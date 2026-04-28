@@ -228,12 +228,31 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
             e.printStackTrace();
         }
     }
+    private void deleteSubjectFromDB(String subjectName) {
+        if (firebaseUid == null) {
+            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        String url = BASE_URL + "/delete?firebase_uid=" + firebaseUid + "&subject_name=" + subjectName;
+
+        StringRequest request = new StringRequest(
+                Request.Method.DELETE,
+                url,
+                response -> {
+                    Toast.makeText(this, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    fetchSubjects(); // 🔥 refresh from DB
+                },
+                error -> Toast.makeText(this, "Delete error: " + error.toString(), Toast.LENGTH_LONG).show()
+        );
+
+        queue.add(request);
+    }
     @Override
     public void onDeleteClick(int position) {
-        subjectList.remove(position);
-        adapter.notifyItemRemoved(position);
-        updateUI();
+        Subject subject = subjectList.get(position);
+
+        deleteSubjectFromDB(subject.getName());
     }
 
     private void updateUI() {

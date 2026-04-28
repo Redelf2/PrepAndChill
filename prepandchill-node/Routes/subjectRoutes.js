@@ -194,7 +194,7 @@ router.post("/saveSession", (req, res) => {
 
             if (err) return res.status(500).json({ error: "DB error" });
 
-            // 🔥 AUTO UPDATE CONFIDENCE (AI LOGIC)
+            //  AUTO UPDATE CONFIDENCE (AI LOGIC)
             const updateConfidenceSQL = `
                 UPDATE user_subjects
                 SET confidence = LEAST(100, GREATEST(0,
@@ -213,4 +213,29 @@ router.post("/saveSession", (req, res) => {
         });
     });
 });
+
+router.delete("/delete", (req, res) => {
+    const { firebase_uid, subject_name } = req.query;
+
+    if (!firebase_uid || !subject_name) {
+        return res.status(400).json({ error: "Missing data" });
+    }
+
+    const sql = `
+        DELETE us FROM user_subjects us
+        JOIN users u ON u.id = us.user_id
+        JOIN subjects s ON s.id = us.subject_id
+        WHERE u.firebase_uid = ? AND s.name = ?
+    `;
+
+    db.query(sql, [firebase_uid, subject_name], (err) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: "Delete failed" });
+        }
+
+        res.json({ message: "Subject deleted" });
+    });
+});
+
 module.exports = router;
