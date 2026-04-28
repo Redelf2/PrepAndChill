@@ -30,6 +30,7 @@
         <activity android:name=".TimetableActivity" />
         <activity android:name=".ConfidenceMapActivity" />
         <activity android:name=".ExamDetailsActivity" />
+        <activity android:name=".FocusActivity" />
 
     </application>
 

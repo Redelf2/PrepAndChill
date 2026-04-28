@@ -5,54 +5,285 @@
     android:layout_height="match_parent"
     android:background="@color/bg_black">
 
+    <!-- Header -->
     <RelativeLayout
         android:id="@+id/rlHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="48dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="12dp"
         android:paddingHorizontal="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/btnBack"
+            android:id="@+id/btnClose"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="@drawable/bg_home_card"
             android:padding="10dp"
             android:src="@drawable/ic_back_arrow"
-            android:contentDescription="Back"
+            android:rotation="45"
+            android:contentDescription="Close"
             android:clickable="true"
             android:focusable="true"
-            app:tint="@color/accent_orange" />
+            app:tint="@color/text_white" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Focus"
+            android:text="Focus Session"
             android:textColor="@color/text_white"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/btnMenu"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_home_card"
+            android:padding="8dp"
+            android:src="@drawable/ic_more_vert"
+            app:tint="@color/text_white" />
     </RelativeLayout>
 
-    <TextView
-        android:id="@+id/tvPlaceholder"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Focus screen (placeholder)"
-        android:textColor="@color/text_gray"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:padding="24dp"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/rlHeader"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toTopOf="@id/bottomNav">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:id="@+id/llTopicInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CURRENT TOPIC"
+                    android:textColor="@color/accent_purple"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:id="@+id/tvFocusTopicName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginHorizontal="32dp"
+                    android:text="Advanced UI Architecture"
+                    android:textColor="@color/text_white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- Timer Circle -->
+            <RelativeLayout
+                android:id="@+id/rlTimerContainer"
+                android:layout_width="260dp"
+                android:layout_height="260dp"
+                android:layout_marginTop="24dp">
+
+                <ProgressBar
+                    android:id="@+id/timerProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:indeterminate="false"
+                    android:max="1000"
+                    android:progress="1000"
+                    android:progressDrawable="@drawable/bg_timer_ring"
+                    style="?android:attr/progressBarStyleHorizontal" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvTimerDisplay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="25:00"
+                        android:textColor="@color/text_white"
+                        android:textSize="56sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvStatusLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Focusing..."
+                        android:textColor="@color/accent_purple"
+                        android:textSize="13sp"
+                        android:textStyle="italic" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <!-- Stats Cards -->
+            <LinearLayout
+                android:id="@+id/llStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginHorizontal="32dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_home_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SESSION"
+                        android:textColor="@color/text_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSessionCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="1/4"
+                        android:textColor="@color/text_white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_home_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TOTAL"
+                        android:textColor="@color/text_gray"
+                        android:textSize="9sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTotalTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="45m"
+                        android:textColor="@color/text_white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Control Buttons -->
+            <LinearLayout
+                android:id="@+id/llControls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/btnStop"
+                    android:layout_width="90dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_home_card"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="■"
+                        android:textColor="@color/text_white"
+                        android:textSize="14sp"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stop"
+                        android:textColor="@color/text_white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnPausePlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:src="@drawable/ic_pomodoro"
+                    app:backgroundTint="@color/accent_purple"
+                    app:fabCustomSize="64dp"
+                    app:maxImageSize="28dp"
+                    app:tint="@color/text_white"
+                    app:elevation="4dp" />
+
+                <LinearLayout
+                    android:id="@+id/btnSkip"
+                    android:layout_width="90dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_home_card"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▷|"
+                        android:textColor="@color/text_white"
+                        android:textSize="14sp"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Skip"
+                        android:textColor="@color/text_white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="64dp"
         android:background="@color/bg_black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu_bottom_nav"
@@ -61,4 +292,3 @@
         app:labelVisibilityMode="labeled" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

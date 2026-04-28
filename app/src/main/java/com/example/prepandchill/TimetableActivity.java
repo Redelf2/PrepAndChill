@@ -12,6 +12,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -22,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class TimetableActivity extends AppCompatActivity {
@@ -41,7 +43,6 @@ public class TimetableActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Modern full screen look
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                         View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -101,7 +102,6 @@ public class TimetableActivity extends AppCompatActivity {
             int finalOffset = offset;
             chip.setOnClickListener(v -> {
                 selectedOffset = finalOffset;
-                // re-render selection states
                 for (int i = 0; i < llDateSelector.getChildCount(); i++) {
                     View child = llDateSelector.getChildAt(i);
                     TextView cdow = child.findViewById(R.id.tvDow);
@@ -159,13 +159,13 @@ public class TimetableActivity extends AppCompatActivity {
             return;
         }
 
-        // Build a simple timeline starting 9:00 AM; offset shifts the start slightly so each day looks different.
         Calendar start = Calendar.getInstance();
         start.set(Calendar.HOUR_OF_DAY, 9 + Math.min(3, selectedOffset));
         start.set(Calendar.MINUTE, 0);
 
         for (JSONObject item : planItems) {
             String subject = item.optString("subject", "Subject");
+            int subjectId = item.optInt("subject_id", -1);
             int minutes = item.optInt("time_minutes", 60);
             String progress = item.optString("progress", "");
 
@@ -180,19 +180,32 @@ public class TimetableActivity extends AppCompatActivity {
             TextView tvMeta = card.findViewById(R.id.tvSessionMeta);
             TextView tvTopic1 = card.findViewById(R.id.tvTopic1);
             TextView tvTopic2 = card.findViewById(R.id.tvTopic2);
+            MaterialButton btnStart = card.findViewById(R.id.btnStartPomodoro);
 
             tvTitle.setText(subject);
             tvTime.setText(timeRange);
             tvMeta.setText(progress != null && !progress.isEmpty() ? progress : ("Planned: " + PlanParser.formatMinutes(minutes)));
 
-            // Fill topics dynamically from syllabus (2 incomplete topics if available)
-            tvTopic1.setText("• Loading syllabus…");
-            tvTopic2.setText("• ");
-            fetchTwoFocusTopics(subject, tvTopic1, tvTopic2);
+            final List<JSONObject> topicList = new ArrayList<>();
+            fetchTwoFocusTopics(subject, tvTopic1, tvTopic2, topicList);
+
+            btnStart.setOnClickListener(v -> {
+                Intent focusIntent = new Intent(TimetableActivity.this, FocusActivity.class);
+                focusIntent.putExtra("subject_name", subject);
+                focusIntent.putExtra("subject_id", subjectId);
+                focusIntent.putExtra("total_minutes", minutes);
+                
+                if (!topicList.isEmpty()) {
+                    focusIntent.putExtra("topic_name", topicList.get(0).optString("topic_name"));
+                    focusIntent.putExtra("topic_id", topicList.get(0).optInt("id"));
+                } else {
+                    focusIntent.putExtra("topic_name", "General Study");
+                    focusIntent.putExtra("topic_id", -1);
+                }
+                startActivity(focusIntent);
+            });
 
             llUpcomingSessions.addView(card);
-
-            // next start time
             start = end;
         }
     }
@@ -201,7 +214,7 @@ public class TimetableActivity extends AppCompatActivity {
         return new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(date);
     }
 
-    private void fetchTwoFocusTopics(String subjectName, TextView tv1, TextView tv2) {
+    private void fetchTwoFocusTopics(String subjectName, TextView tv1, TextView tv2, List<JSONObject> outList) {
         if (queue == null || firebaseUid == null || subjectName == null) {
             tv1.setText("• Add syllabus topics for this subject.");
             tv2.setText("• ");
@@ -216,29 +229,29 @@ public class TimetableActivity extends AppCompatActivity {
                 url,
                 null,
                 response -> {
-                    String t1 = null;
-                    String t2 = null;
+                    outList.clear();
                     for (int i = 0; i < response.length(); i++) {
                         JSONObject o = response.optJSONObject(i);
                         if (o == null) continue;
                         boolean done = o.optInt("is_completed", 0) == 1;
                         if (done) continue;
-                        String name = o.optString("topic_name", "").trim();
-                        if (name.isEmpty()) continue;
-                        if (t1 == null) t1 = name;
-                        else if (t2 == null) { t2 = name; break; }
+                        outList.add(o);
                     }
 
-                    if (t1 == null) {
+                    if (outList.isEmpty()) {
                         tv1.setText("• No pending topics found.");
                         tv2.setText("• ");
                     } else {
-                        tv1.setText("• " + t1);
-                        tv2.setText(t2 != null ? ("• " + t2) : "• ");
+                        tv1.setText("• " + outList.get(0).optString("topic_name"));
+                        if (outList.size() > 1) {
+                            tv2.setText("• " + outList.get(1).optString("topic_name"));
+                        } else {
+                            tv2.setText("• ");
+                        }
                     }
                 },
                 error -> {
-                    tv1.setText("• Couldn’t load syllabus right now.");
+                    tv1.setText("• Couldn’t load syllabus.");
                     tv2.setText("• ");
                 }
         );
