@@ -80,31 +80,49 @@ public class FocusActivity extends AppCompatActivity {
                 topicName = intent.getStringExtra("topic_name");
                 totalDurationMins = intent.getIntExtra("total_minutes", 25);
                 
-                Log.d(TAG, "Data: Sub=" + subjectName + ", Topic=" + topicName + ", Mins=" + totalDurationMins);
+                // If there's remaining time from backend, use it
+                int remainingSeconds = intent.getIntExtra("remaining_seconds", -1);
+                if (remainingSeconds > 0) {
+                    timeLeftInMillis = (long) remainingSeconds * 1000;
+                    initialTimeInMillis = (long) totalDurationMins * 60 * 1000; // Keep original for progress bar
+                } else {
+                    initialTimeInMillis = (long) totalDurationMins * 60 * 1000;
+                    timeLeftInMillis = initialTimeInMillis;
+                }
+                
+                Log.d(TAG, "Data: Sub=" + subjectName + ", Topic=" + topicName + ", Mins=" + totalDurationMins + ", RemainingSec=" + remainingSeconds);
             }
 
             if (topicName != null) tvTopicName.setText(topicName);
             tvTotalTime.setText(totalDurationMins + "m");
             
-            initialTimeInMillis = (long) totalDurationMins * 60 * 1000;
-            timeLeftInMillis = initialTimeInMillis;
-            
             updateCountDownText();
             updateProgressBar();
 
-            btnClose.setOnClickListener(v -> finish());
+            btnClose.setOnClickListener(v -> {
+                saveProgressToBackend();
+                finish();
+            });
             
             btnPausePlay.setOnClickListener(v -> {
-                if (timerRunning) pauseTimer();
-                else startTimer();
+                if (timerRunning) {
+                    pauseTimer();
+                    saveProgressToBackend();
+                } else {
+                    startTimer();
+                }
             });
 
             btnStop.setOnClickListener(v -> stopAndLogSession());
-            btnSkip.setOnClickListener(v -> finish());
+            btnSkip.setOnClickListener(v -> {
+                saveProgressToBackend();
+                finish();
+            });
 
             getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
+                    saveProgressToBackend();
                     finish();
                 }
             });
@@ -135,6 +153,9 @@ public class FocusActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 timerRunning = false;
+                timeLeftInMillis = 0;
+                updateCountDownText();
+                updateProgressBar();
                 btnPausePlay.setImageResource(R.drawable.ic_pomodoro);
                 stopAndLogSession();
             }
@@ -151,8 +172,9 @@ public class FocusActivity extends AppCompatActivity {
     }
 
     private void updateCountDownText() {
-        int minutes = (int) (timeLeftInMillis / 1000) / 60;
-        int seconds = (int) (timeLeftInMillis / 1000) % 60;
+        int totalSeconds = (int) (timeLeftInMillis / 1000);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
         String timeLeftFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
         tvTimerDisplay.setText(timeLeftFormatted);
     }
@@ -163,15 +185,36 @@ public class FocusActivity extends AppCompatActivity {
         timerProgressBar.setProgress(progress);
     }
 
+    private void saveProgressToBackend() {
+        if (topicId == -1 || firebaseUid == null) return;
+
+        String url = "http://10.7.28.203:3000/api/subjects/saveRemainingTime";
+        try {
+            JSONObject body = new JSONObject();
+            body.put("firebase_uid", firebaseUid);
+            body.put("topic_id", topicId);
+            body.put("remaining_seconds", (int) (timeLeftInMillis / 1000));
+
+            queue.add(new JsonObjectRequest(Request.Method.POST, url, body, null, null));
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving remaining time", e);
+        }
+    }
+
     private void stopAndLogSession() {
         pauseTimer();
-        int minutesSpent = (int) ((initialTimeInMillis - timeLeftInMillis) / 60000);
         
-        if (minutesSpent < 1) {
-            Toast.makeText(this, "Session too short to log.", Toast.LENGTH_SHORT).show();
+        // Calculate exact seconds spent
+        long millisSpent = (initialTimeInMillis - timeLeftInMillis);
+        int secondsSpent = (int) (millisSpent / 1000);
+        float minutesSpent = secondsSpent / 60.0f;
+
+        if (secondsSpent < 5) {
             finish();
             return;
         }
+
+        saveProgressToBackend(); // Also save the remaining time
 
         String url = "http://10.7.28.203:3000/api/subjects/saveSession";
         try {
@@ -179,7 +222,7 @@ public class FocusActivity extends AppCompatActivity {
             body.put("firebase_uid", firebaseUid);
             body.put("subject_id", subjectId);
             body.put("topic_id", topicId);
-            body.put("minutes_spent", minutesSpent);
+            body.put("minutes_spent", Math.round(minutesSpent)); // Rounding to nearest minute for session logging
             body.put("performance_score", 90); 
 
             queue.add(new JsonObjectRequest(Request.Method.POST, url, body,
@@ -205,17 +248,26 @@ public class FocusActivity extends AppCompatActivity {
             bottomNav.setOnItemSelectedListener(item -> {
                 int id = item.getItemId();
                 if (id == R.id.nav_home) {
+                    saveProgressToBackend();
                     BottomNavNavigator.open(this, HomeActivity.class);
                     return true;
                 } else if (id == R.id.nav_study) {
+                    saveProgressToBackend();
                     BottomNavNavigator.open(this, StudyActivity.class);
                     return true;
                 } else if (id == R.id.nav_analytics) {
+                    saveProgressToBackend();
                     BottomNavNavigator.open(this, ConfidenceMapActivity.class);
                     return true;
                 }
                 return false;
             });
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveProgressToBackend();
     }
 }

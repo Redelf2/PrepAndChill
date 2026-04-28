@@ -115,13 +115,16 @@ router.get("/topics", (req, res) => {
         SELECT t.id, t.topic_name,
         COALESCE((SELECT ut.is_completed FROM user_topics ut
                   JOIN users u ON u.id = ut.user_id
-                  WHERE ut.topic_id = t.id AND u.firebase_uid = ? LIMIT 1), 0) as is_completed
+                  WHERE ut.topic_id = t.id AND u.firebase_uid = ? LIMIT 1), 0) as is_completed,
+        COALESCE((SELECT ut.remaining_seconds FROM user_topics ut
+                  JOIN users u ON u.id = ut.user_id
+                  WHERE ut.topic_id = t.id AND u.firebase_uid = ? LIMIT 1), NULL) as remaining_seconds
         FROM topics t
         JOIN subjects s ON s.id = t.subject_id
         WHERE LOWER(s.name) = LOWER(?)
     `;
 
-    db.query(sql, [firebase_uid || '', name], (err, result) => {
+    db.query(sql, [firebase_uid || '', firebase_uid || '', name], (err, result) => {
         if (err) {
             console.error("Error fetching topics:", err);
             return res.status(500).json({ error: "DB error fetching topics" });
@@ -142,6 +145,27 @@ router.post("/updateTopicProgress", (req, res) => {
         });
     });
 });
+
+router.post("/saveRemainingTime", (req, res) => {
+    const { firebase_uid, topic_id, remaining_seconds } = req.body;
+    if (!firebase_uid || !topic_id) return res.status(400).json({ error: "Missing data" });
+
+    db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
+        if (err || !userRows.length) return res.status(500).json({ error: "User not found" });
+        const userId = userRows[0].id;
+
+        const sql = `
+            INSERT INTO user_topics (user_id, topic_id, remaining_seconds)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE remaining_seconds = VALUES(remaining_seconds)
+        `;
+        db.query(sql, [userId, topic_id, remaining_seconds], (err) => {
+            if (err) return res.status(500).json({ error: "DB error" });
+            res.json({ message: "Remaining time saved" });
+        });
+    });
+});
+
 router.post("/saveSession", (req, res) => {
     const { firebase_uid, subject_id, topic_id, minutes_spent, performance_score } = req.body;
 

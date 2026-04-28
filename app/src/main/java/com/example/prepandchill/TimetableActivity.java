@@ -189,15 +189,22 @@ public class TimetableActivity extends AppCompatActivity {
             final List<JSONObject> topicList = new ArrayList<>();
             fetchTwoFocusTopics(subject, tvTopic1, tvTopic2, topicList);
 
+            // Inside renderSessionsForSelectedDay in TimetableActivity.java
             btnStart.setOnClickListener(v -> {
                 Intent focusIntent = new Intent(TimetableActivity.this, FocusActivity.class);
                 focusIntent.putExtra("subject_name", subject);
                 focusIntent.putExtra("subject_id", subjectId);
                 focusIntent.putExtra("total_minutes", minutes);
-                
+
                 if (!topicList.isEmpty()) {
-                    focusIntent.putExtra("topic_name", topicList.get(0).optString("topic_name"));
-                    focusIntent.putExtra("topic_id", topicList.get(0).optInt("id"));
+                    JSONObject topTopic = topicList.get(0);
+                    focusIntent.putExtra("topic_name", topTopic.optString("topic_name"));
+                    focusIntent.putExtra("topic_id", topTopic.optInt("id"));
+
+                    // Pass the saved remaining time if it exists
+                    if (!topTopic.isNull("remaining_seconds")) {
+                        focusIntent.putExtra("remaining_seconds", topTopic.optInt("remaining_seconds"));
+                    }
                 } else {
                     focusIntent.putExtra("topic_name", "General Study");
                     focusIntent.putExtra("topic_id", -1);
