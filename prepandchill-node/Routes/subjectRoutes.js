@@ -110,7 +110,7 @@ router.get("/topics", (req, res) => {
     const { name, firebase_uid } = req.query;
     if (!name) return res.status(400).json({ error: "Subject name is required" });
 
-    // Use LOWER() for case-insensitive matching
+   
     const sql = `
         SELECT t.id, t.topic_name,
         COALESCE((SELECT ut.is_completed FROM user_topics ut
@@ -142,5 +142,51 @@ router.post("/updateTopicProgress", (req, res) => {
         });
     });
 });
+router.post("/saveSession", (req, res) => {
+    const { firebase_uid, subject_id, topic_id, minutes_spent, performance_score } = req.body;
 
+    if (!firebase_uid || !subject_id || !minutes_spent) {
+        return res.status(400).json({ error: "Missing data" });
+    }
+
+    db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
+        if (err || !userRows.length) return res.status(500).json({ error: "User not found" });
+
+        const userId = userRows[0].id;
+
+        const insertSQL = `
+            INSERT INTO study_sessions 
+            (user_id, subject_id, topic_id, minutes_spent, performance_score, session_date)
+            VALUES (?, ?, ?, ?, ?, CURDATE())
+        `;
+
+        db.query(insertSQL, [
+            userId,
+            subject_id,
+            topic_id || null,
+            minutes_spent,
+            performance_score || 50
+        ], (err) => {
+
+            if (err) return res.status(500).json({ error: "DB error" });
+
+            // 🔥 AUTO UPDATE CONFIDENCE (AI LOGIC)
+            const updateConfidenceSQL = `
+                UPDATE user_subjects
+                SET confidence = LEAST(100, GREATEST(0,
+                    (COALESCE(confidence,50) * 0.7) + (? * 0.3)
+                ))
+                WHERE user_id = ? AND subject_id = ?
+            `;
+
+            db.query(updateConfidenceSQL, [
+                performance_score || 50,
+                userId,
+                subject_id
+            ]);
+
+            res.json({ message: "Session saved + confidence updated" });
+        });
+    });
+});
 module.exports = router;
