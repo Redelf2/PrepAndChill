@@ -35,7 +35,6 @@ router.post("/generatePlan", (req, res) => {
     const totalHours = parseHours(total_daily_hours, 6);
     const minMinutesPerSubject = 30;
 
-    // Enhanced SQL to count syllabus progress
     const sql = `
         SELECT
             s.id AS subject_id,
@@ -68,13 +67,13 @@ router.post("/generatePlan", (req, res) => {
             const difficulty = clampInt(r.difficulty, 1, 3);
             const confidence = clampInt(r.confidence, 0, 100);
             const days_left = toDaysLeft(r.exam_date);
-            const total = r.total_topics || 5; // Default to 5 if syllabus not defined
+            const total = r.total_topics || 5; 
             const completed = r.completed_topics || 0;
 
-            // syllabus_factor: 1.0 if not started, 0.1 if almost done
+           
             const syllabus_remaining_ratio = Math.max(0.1, (total - completed) / total);
 
-            // Calculation logic: Syllabus Progress * (Inverted Confidence + Difficulty + Urgency)
+            
             const score = syllabus_remaining_ratio * (
                 ((100 - confidence) / 10) +
                 (difficulty * 5) +
