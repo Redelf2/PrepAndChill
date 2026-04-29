@@ -34,9 +34,41 @@ router.post("/updateExamDate", (req, res) => {
 
 
 router.post("/add", (req, res) => {
-    // Disabled to enforce transactions. This now acts as a dummy route so Android doesn't crash.
-    // Ensure user creation is handled at login/registration, not here.
-    res.json({ message: "Subject staged for transaction" });
+    const { firebase_uid, name, email, username } = req.body;
+
+    if (!firebase_uid || !name) {
+        return res.status(400).json({ error: "firebase_uid and name are required" });
+    }
+
+    const safeEmail = email || `${firebase_uid}@local.invalid`;
+    const safeUsername = username || "User";
+
+    db.query(
+        "INSERT IGNORE INTO users (firebase_uid, username, email) VALUES (?, ?, ?)",
+        [firebase_uid, safeUsername, safeEmail],
+        (err) => {
+            if (err) return res.status(500).json({ error: "DB error (user)" });
+
+            db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
+                if (err || !userRows.length) return res.status(500).json({ error: "User lookup failed" });
+                const userId = userRows[0].id;
+
+                db.query("INSERT IGNORE INTO subjects (name) VALUES (?)", [name], (err) => {
+                    if (err) return res.status(500).json({ error: "DB error (subject)" });
+
+                    db.query("SELECT id FROM subjects WHERE name = ?", [name], (err, subjRows) => {
+                        if (err || !subjRows.length) return res.status(500).json({ error: "Subject lookup failed" });
+                        const subjectId = subjRows[0].id;
+
+                        db.query("INSERT IGNORE INTO user_subjects (user_id, subject_id) VALUES (?, ?)", [userId, subjectId], (err) => {
+                            if (err) return res.status(500).json({ error: "DB error (mapping)" });
+                            res.json({ message: "Subject added" });
+                        });
+                    });
+                });
+            });
+        }
+    );
 });
 
 router.post("/updateConfidence", (req, res) => {
