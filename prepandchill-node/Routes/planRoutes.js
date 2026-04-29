@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const util = require("util");
+
+const queryAsync = util.promisify(db.query).bind(db);
 
 // ---------- Helpers ----------
 function clampInt(n, min, max) {
@@ -29,13 +32,53 @@ function toDaysLeft(examDate) {
 }
 
 // ---------- Route ----------
-router.post("/generatePlan", (req, res) => {
+router.post("/generatePlan", async (req, res) => {
 
-    const { firebase_uid, total_daily_hours } = req.body;
+    const { firebase_uid, total_daily_hours, setup_data } = req.body;
 
     if (!firebase_uid) {
         return res.status(400).json({ success: false, error: "firebase_uid is required" });
     }
+
+    // --- TRANSACTIONAL SETUP (Only runs if setup_data is provided) ---
+    if (setup_data && Array.isArray(setup_data)) {
+        try {
+            await queryAsync("START TRANSACTION");
+
+            const userRows = await queryAsync("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid]);
+            if (!userRows.length) throw new Error("User not found");
+            const userId = userRows[0].id;
+
+            for (const sub of setup_data) {
+                // Insert/Update Subject setup
+                await queryAsync(
+                    `INSERT INTO user_subjects (user_id, subject_id, exam_date, confidence, difficulty) 
+                     VALUES (?, ?, ?, ?, 2) 
+                     ON DUPLICATE KEY UPDATE exam_date = VALUES(exam_date), confidence = VALUES(confidence)`,
+                    [userId, sub.subject_id, sub.exam_date || null, sub.confidence || 50]
+                );
+
+                // Insert/Update completed topics
+                if (Array.isArray(sub.completed_topic_ids)) {
+                    for (const topicId of sub.completed_topic_ids) {
+                        await queryAsync(
+                            `INSERT INTO user_topics (user_id, topic_id, is_completed) 
+                             VALUES (?, ?, 1) 
+                             ON DUPLICATE KEY UPDATE is_completed = 1`,
+                            [userId, topicId]
+                        );
+                    }
+                }
+            }
+            await queryAsync("COMMIT");
+            console.log("Setup Transaction Committed successfully!");
+        } catch (error) {
+            await queryAsync("ROLLBACK");
+            console.error("Setup Transaction Rollback:", error);
+            return res.status(500).json({ success: false, error: "Setup transaction failed and was rolled back." });
+        }
+    }
+    // -----------------------------------------------------------------
 
     const totalHours = parseHours(total_daily_hours, 6);
 

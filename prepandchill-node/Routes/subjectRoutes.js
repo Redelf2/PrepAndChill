@@ -11,12 +11,10 @@ router.get("/", (req, res) => {
     }
 
     const sql = `
-        SELECT s.id, s.name, us.exam_date, us.confidence
-        FROM user_subjects us
-        JOIN subjects s ON s.id = us.subject_id
-        JOIN users u ON u.id = us.user_id
-        WHERE u.firebase_uid = ?
-        ORDER BY s.name ASC
+        SELECT subject_id AS id, name, exam_date, confidence
+        FROM user_dashboard_view
+        WHERE firebase_uid = ?
+        ORDER BY name ASC
     `;
 
     db.query(sql, [firebase_uid], (err, result) => {
