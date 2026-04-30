@@ -27,9 +27,27 @@ router.get("/", (req, res) => {
 });
 
 router.post("/updateExamDate", (req, res) => {
-    // Disabled to enforce transactions. This now acts as a dummy route so Android doesn't crash.
-    // All data should be batched and sent to /generatePlan instead.
-    res.json({ message: "Exam date staged for transaction" });
+    const { firebase_uid, subject_name, exam_date } = req.body;
+
+    if (!firebase_uid || !subject_name || !exam_date) {
+        return res.status(400).json({ error: "firebase_uid, subject_name, exam_date are required" });
+    }
+
+    const sql = `
+        UPDATE user_subjects us
+        JOIN users u ON u.id = us.user_id
+        JOIN subjects s ON s.id = us.subject_id
+        SET us.exam_date = ?
+        WHERE u.firebase_uid = ? AND s.name = ?
+    `;
+
+    db.query(sql, [exam_date, firebase_uid, subject_name], (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: "DB error" });
+        }
+        res.json({ message: "Exam date updated" });
+    });
 });
 
 
@@ -42,6 +60,11 @@ router.post("/add", (req, res) => {
 
     const safeEmail = email || `${firebase_uid}@local.invalid`;
     const safeUsername = username || "User";
+
+    // Start of the Global Transaction!
+    db.query("ROLLBACK", () => {
+        db.query("START TRANSACTION", () => {
+
 
     db.query(
         "INSERT IGNORE INTO users (firebase_uid, username, email) VALUES (?, ?, ?)",
@@ -69,11 +92,23 @@ router.post("/add", (req, res) => {
             });
         }
     );
+        });
+    });
 });
 
 router.post("/updateConfidence", (req, res) => {
-    // Disabled to enforce transactions. This now acts as a dummy route so Android doesn't crash.
-    res.json({ message: "Confidence staged for transaction" });
+    const { firebase_uid, subject_name, confidence } = req.body;
+    const sql = `
+        UPDATE user_subjects us
+        JOIN users u ON u.id = us.user_id
+        JOIN subjects s ON s.id = us.subject_id
+        SET us.confidence = ?
+        WHERE u.firebase_uid = ? AND s.name = ?
+    `;
+    db.query(sql, [confidence, firebase_uid, subject_name], (err) => {
+        if (err) return res.status(500).json({ error: "DB error" });
+        res.json({ message: "Confidence updated" });
+    });
 });
 
 router.get("/topics", (req, res) => {
@@ -104,8 +139,16 @@ router.get("/topics", (req, res) => {
 });
 
 router.post("/updateTopicProgress", (req, res) => {
-    // Disabled to enforce transactions. This now acts as a dummy route so Android doesn't crash.
-    res.json({ message: "Progress staged for transaction" });
+    const { firebase_uid, topic_id, is_completed } = req.body;
+    db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
+        if (err || !userRows.length) return res.status(500).json({ error: "User not found" });
+        const userId = userRows[0].id;
+        const sql = "INSERT INTO user_topics (user_id, topic_id, is_completed) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed)";
+        db.query(sql, [userId, topic_id, is_completed ? 1 : 0], (err) => {
+            if (err) return res.status(500).json({ error: "DB error" });
+            res.json({ message: "Progress updated" });
+        });
+    });
 });
 
 router.post("/saveRemainingTime", (req, res) => {
