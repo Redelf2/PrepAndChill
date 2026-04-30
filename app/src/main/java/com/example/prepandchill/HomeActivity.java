@@ -109,6 +109,25 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(dIntent);
             });
         }
+
+        LinearLayout navStudy = findViewById(R.id.navStudy);
+        if (navStudy != null) {
+            navStudy.setOnClickListener(v -> {
+                Intent tIntent = new Intent(HomeActivity.this, TimetableActivity.class);
+                tIntent.putExtra("selectedSubjects", selectedSubjects);
+                tIntent.putExtra("generatedPlanJson", PlanPrefs.readPlanJson(HomeActivity.this));
+                startActivity(tIntent);
+            });
+        }
+
+        LinearLayout navAnalytics = findViewById(R.id.navAnalytics);
+        if (navAnalytics != null) {
+            navAnalytics.setOnClickListener(v -> {
+                Intent cIntent = new Intent(HomeActivity.this, ConfidenceMapActivity.class);
+                cIntent.putExtra("selectedSubjects", selectedSubjects);
+                startActivity(cIntent);
+            });
+        }
     }
 
     private void submitAiCommand() {

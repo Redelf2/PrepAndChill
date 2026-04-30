@@ -26,7 +26,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_book_open"
-                app:tint="#A855F7" />
+                app:tint="#FF5C00" />
         </FrameLayout>
 
         <TextView
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:fontFamily="@font/public_sans_bold"
+            android:fontFamily="@font/outfit_bold"
             android:text="Subject Name"
             android:textColor="#F1F5F9"
             android:textSize="17sp" />
@@ -66,7 +66,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:fontFamily="@font/public_sans_regular"
+                android:fontFamily="@font/outfit_regular"
                 android:text="Proficiency Level"
                 android:textColor="#F1F5F9"
                 android:textSize="15sp" />
@@ -74,7 +74,7 @@
                 android:id="@+id/tvPercent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/public_sans_bold"
+                android:fontFamily="@font/outfit_bold"
                 android:text="0%"
                 android:textColor="#F97316"
                 android:textSize="14sp" />
@@ -96,7 +96,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:fontFamily="@font/public_sans_bold"
+            android:fontFamily="@font/outfit_bold"
             android:text="Syllabus Topics"
             android:textColor="#94A3B8"
             android:textSize="14sp" />
@@ -105,7 +105,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:fontFamily="@font/public_sans_regular"
+            android:fontFamily="@font/outfit_regular"
             android:text="Tick the topics you have already studied:"
             android:textColor="#64748B"
             android:textSize="12sp" />

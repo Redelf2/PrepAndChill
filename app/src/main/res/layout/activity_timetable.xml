@@ -6,29 +6,45 @@
     android:background="@color/bg_black">
 
     <!-- Header -->
-    <RelativeLayout
-        android:id="@+id/rlHeader"
+    <LinearLayout
+        android:id="@+id/llHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingTop="48dp"
-        android:paddingBottom="20dp"
+        android:paddingBottom="16dp"
         android:paddingHorizontal="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_home_card"
+            android:padding="10dp"
             android:src="@drawable/ic_back_arrow"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            app:tint="@color/accent_orange" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Time Table"
+            android:textColor="@color/text_white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentEnd="true"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_home_card"
+            android:padding="10dp"
             android:src="@drawable/ic_more_vert" />
-    </RelativeLayout>
+    </LinearLayout>
 
     <!-- Date Selector (generated dynamically) -->
     <HorizontalScrollView
@@ -39,7 +55,7 @@
         android:scrollbars="none"
         android:paddingHorizontal="12dp"
         android:paddingVertical="10dp"
-        app:layout_constraintTop_toBottomOf="@id/rlHeader">
+        app:layout_constraintTop_toBottomOf="@id/llHeader">
 
         <LinearLayout
             android:id="@+id/llDateSelector"

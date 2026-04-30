@@ -3,22 +3,22 @@
 
     <color name="bg_black">#FF000000</color>
 
-
-    <color name="purple_primary">#FFA855F7</color>
-    <color name="purple_dark">#FF7E22CE</color>
-    <color name="purple_glow_soft">#0DA855F7</color>
-    <color name="purple_icon_bg">#1AA855F7</color>
+    <!-- Primary accent: Vibrant Orange (#FF5C00) -->
+    <color name="electric_blue">#FF5C00</color>
+    <color name="purple_primary">#FFFF5C00</color>
+    <color name="purple_dark">#FFCC4A00</color>
+    <color name="purple_glow_soft">#0DFF5C00</color>
+    <color name="purple_icon_bg">#1AFF5C00</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="text_muted">#FF94A3B8</color>
 
-
-    <color name="button_shadow">#33A855F7</color>
+    <color name="button_shadow">#33FF5C00</color>
 
     <color name="card_dark">#121212</color>
     <color name="card_surface">#1E1E1E</color>
     <color name="accent_orange">#FF5C00</color>
-    <color name="accent_purple">#9B5CF6</color>
+    <color name="accent_purple">#FF5C00</color>
     <color name="text_white">#FFFFFF</color>
     <color name="text_gray">#A0A0A0</color>
 
@@ -32,8 +32,8 @@
     <color name="chart_bar_default">#3D2B1F</color>
     <color name="chart_bar_highlight">#FF5C00</color>
 
-    <color name="mastery_blue">#3A86FF</color>
-    <color name="mastery_purple">#9B5CF6</color>
+    <color name="mastery_blue">#FF5C00</color>
+    <color name="mastery_purple">#FF5C00</color>
     <color name="mastery_orange">#FF5C00</color>
     <color name="mastery_green">#00C853</color>
 

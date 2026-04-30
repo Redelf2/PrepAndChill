@@ -117,7 +117,7 @@
         android:textSize="17sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
-        android:background="@drawable/bg_button_purple_glow"
+        android:background="@drawable/bg_button_gradient"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         app:backgroundTint="@null"

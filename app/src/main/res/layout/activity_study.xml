@@ -54,7 +54,7 @@
         android:layout_height="0dp"
         android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/hsDateSelector"
+        app:layout_constraintTop_toBottomOf="@id/rlHeader"
         app:layout_constraintBottom_toTopOf="@id/bottomNav">
 
         <!-- Reuse the same body content structure from your timetable design -->

@@ -71,7 +71,7 @@
                 android:text="Step 2 of 4"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#A855F7" />
+                android:textColor="#FF5C00" />
         </LinearLayout>
 
         <LinearLayout
@@ -117,7 +117,7 @@
                 android:text="Subject &amp; Date Setup"
                 android:textSize="30sp"
                 android:textStyle="bold"
-                android:textColor="#A855F7"
+                android:textColor="#FF5C00"
                 android:layout_marginBottom="8dp" />
 
             <TextView

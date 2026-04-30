@@ -3,6 +3,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 
-    <solid android:color="#1AA855F7" />  <!-- ~10% opacity purple -->
+    <solid android:color="#1AFF5C00" />  <!-- ~10% opacity orange -->
 
 </shape>
