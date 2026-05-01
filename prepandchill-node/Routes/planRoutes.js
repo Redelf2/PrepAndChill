@@ -1,9 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const util = require("util");
-
-const queryAsync = util.promisify(db.query).bind(db);
 
 // ---------- Helpers ----------
 function clampInt(n, min, max) {
@@ -31,23 +28,17 @@ function toDaysLeft(examDate) {
     return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-// ---------- Route ----------
-router.post("/generatePlan", async (req, res) => {
 
-    const { firebase_uid, total_daily_hours, setup_data } = req.body;
+// ==========================
+// ✅ GENERATE PLAN (READ ONLY)
+// ==========================
+router.post("/generatePlan", (req, res) => {
+
+    const { firebase_uid, total_daily_hours } = req.body;
 
     if (!firebase_uid) {
         return res.status(400).json({ success: false, error: "firebase_uid is required" });
     }
-
-    // --- COMMIT THE GLOBAL TRANSACTION ---
-    try {
-        await queryAsync("COMMIT");
-        console.log("Global Setup Transaction Committed successfully!");
-    } catch (error) {
-        console.error("Setup Transaction Commit Failed:", error);
-    }
-    // -----------------------------------------------------------------
 
     const totalHours = parseHours(total_daily_hours, 6);
 
@@ -107,7 +98,7 @@ router.post("/generatePlan", async (req, res) => {
 
             return {
                 subject: r.subject,
-                subject_id: r.subject_id, // 🔥 IMPORTANT for history saving
+                subject_id: r.subject_id,
                 difficulty,
                 confidence,
                 days_left,
@@ -133,7 +124,6 @@ router.post("/generatePlan", async (req, res) => {
                 ? (it.score / totalScore) * totalMinutesAvailable
                 : (totalMinutesAvailable / items.length);
 
-            // Burnout control
             proportional = Math.min(proportional, totalMinutesAvailable * MAX_SUBJECT_RATIO);
 
             const minutes = Math.max(MIN_MINUTES, Math.round(proportional));
@@ -143,32 +133,26 @@ router.post("/generatePlan", async (req, res) => {
 
             return {
                 subject: it.subject,
-                subject_id: it.subject_id, // 🔥 carry forward
-
+                subject_id: it.subject_id,
                 time_hours: Number((minutes / 60).toFixed(2)),
                 time_minutes: minutes,
-
                 split: {
                     learning_minutes: learning,
                     revision_minutes: revision
                 },
-
                 priority_score: it.score.toFixed(2),
-
                 insights: {
                     urgency: it.days_left + " days left",
                     weakness: (100 - it.confidence) + "%",
                     progress: `${it.completed_topics}/${it.total_topics}`,
-                    focus: it.remaining > 0.6 ? "New Learning" : "Revision Focus"
+                    focus: it.remaining > 0.6 ? "New Learning" : "Revision"
                 }
             };
         });
 
-    
+        // OPTIONAL: Save history
         db.query("SELECT id FROM users WHERE firebase_uid = ?", [firebase_uid], (err, userRows) => {
-
             if (!err && userRows.length) {
-
                 const userId = userRows[0].id;
 
                 plan.forEach(p => {
@@ -180,9 +164,7 @@ router.post("/generatePlan", async (req, res) => {
             }
         });
 
-      
         res.json({ success: true, plan });
-
     });
 });
 
