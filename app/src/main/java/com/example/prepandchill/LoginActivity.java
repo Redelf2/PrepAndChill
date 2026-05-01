@@ -64,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
                 etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
             }
             passwordVisible = !passwordVisible;
-            etPassword.setSelection(etPassword.length());
+            etPassword.setSelection(etPassword.length());  //keeps text line at the end , to help not annoy the user
         });
 
 
@@ -79,9 +79,9 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(task -> {
+                    .addOnCompleteListener(task -> { //listener that only runs if the firebase finishes authentication
 
-                        if (task.isSuccessful()) {
+                        if (task.isSuccessful()) { //login ssful or not
 
                             FirebaseUser user = mAuth.getCurrentUser();
 

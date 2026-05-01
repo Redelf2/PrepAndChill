@@ -13,11 +13,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | //Design behind status bar , ie.. behind battery bar , not bar
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE //keeps layout stable if status bar changes
         );
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main); // Set the layout for the activity , connects xml to java
+
 
         MaterialButton btnGetStarted = findViewById(R.id.btnGetStarted);
         btnGetStarted.setOnClickListener(v -> {

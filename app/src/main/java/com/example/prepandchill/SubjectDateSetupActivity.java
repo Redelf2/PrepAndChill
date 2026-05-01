@@ -43,25 +43,28 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject_date_setup);
 
-        selectedExam = getIntent().getStringExtra("selectedExam");
+        selectedExam = getIntent().getStringExtra("selectedExam"); //GET SELECTED EXAM FROM PREVIOUS ACTIVITY
+
 
         rvSubjects = findViewById(R.id.rvSubjects);
         tvSubjectsReady = findViewById(R.id.tvSubjectsReady);
         View btnAddSubject = findViewById(R.id.btnAddSubject);
         MaterialButton btnSaveContinue = findViewById(R.id.btnSaveContinue);
 
-        queue = Volley.newRequestQueue(this);
+        queue = Volley.newRequestQueue(this); //SETUP VOLLEY REQUEST QUEUE
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        firebaseUid = (user != null) ? user.getUid() : null;
-        firebaseEmail = (user != null) ? user.getEmail() : null;
-        firebaseUsername = (user != null) ? user.getDisplayName() : null;
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser(); //GET CURRENT USER
+        firebaseUid = (user != null) ? user.getUid() : null; //GET UID
+        firebaseEmail = (user != null) ? user.getEmail() : null; //GET EMAIL
+        firebaseUsername = (user != null) ? user.getDisplayName() : null; //GET USERNAME
+
 
         subjectList = new ArrayList<>();
-        adapter = new SubjectAdapter(subjectList, this);
-        rvSubjects.setLayoutManager(new LinearLayoutManager(this));
-        rvSubjects.setAdapter(adapter);
-        rvSubjects.setNestedScrollingEnabled(false);
+        adapter = new SubjectAdapter(subjectList, this); //SETUP ADAPTER
+        rvSubjects.setLayoutManager(new LinearLayoutManager(this)); //SETUP RECYCLER VIEW WITH LINEAR LAYOUT
+        rvSubjects.setAdapter(adapter); //ADAPTER IS SETUPED
+        rvSubjects.setNestedScrollingEnabled(true); //DISABLE SCROLLING
+
         //  Load subjects from DB
         fetchSubjects();
 
@@ -78,13 +81,13 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
                 return;
             }
 
-            Intent intent = new Intent(this, SubjectAssessmentActivity.class);
-            intent.putExtra("selectedSubjects", selectedSubjects);
-            intent.putExtra("selectedExam", selectedExam);
-            startActivity(intent);
+            Intent intent = new Intent(this, SubjectAssessmentActivity.class); //NEXT ACTIVITY
+            intent.putExtra("selectedSubjects", selectedSubjects); //SEND SELECTED SUBJECTS TO NEXT ACTIVITY
+            intent.putExtra("selectedExam", selectedExam); //SEND SELECTED EXAM TO NEXT ACTIVITY
+            startActivity(intent); //START NEXT ACTIVITY
         });
 
-        updateUI();
+        updateUI(); //UPDATE UI AFTER FETCHING SUBJECTS FROM DB
     }
 
 
@@ -119,7 +122,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
                 error -> Toast.makeText(this, "Fetch error: " + error.toString(), Toast.LENGTH_LONG).show()
         );
 
-        queue.add(request);
+        queue.add(request); //ADD REQUEST TO QUEUE
     }
 
     // ADD SUBJECT TO DB + REFRESH

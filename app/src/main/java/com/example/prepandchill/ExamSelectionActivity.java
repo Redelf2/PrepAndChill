@@ -48,12 +48,12 @@ public class ExamSelectionActivity extends AppCompatActivity {
         });
 
         rvExamOptions.setLayoutManager(new GridLayoutManager(this, 2));
-        rvExamOptions.setAdapter(adapter);
+        rvExamOptions.setAdapter(adapter); //ADAPTER IS SETUPED
 
         btnContinue.setOnClickListener(v -> {
-            Intent intent = new Intent(ExamSelectionActivity.this, SubjectDateSetupActivity.class);
-            intent.putExtra("selectedExam", selectedExam);
-            startActivity(intent);
+            Intent intent = new Intent(ExamSelectionActivity.this, SubjectDateSetupActivity.class); //NEXT ACTIVITY IS STARTED WITH SELECTED EXAM
+            intent.putExtra("selectedExam", selectedExam); //SEND SELECTED EXAM TO NEXT ACTIVITY
+            startActivity(intent); //START NEXT ACTIVITY
         });
     }
 
@@ -62,7 +62,7 @@ public class ExamSelectionActivity extends AppCompatActivity {
             examList.get(i).setSelected(i == position);
         }
         selectedExam = examList.get(position).getName();
-        adapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged(); //refresh UI
     }
 
     private void showCustomExamDialog(int position) {
@@ -76,16 +76,16 @@ public class ExamSelectionActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
 
         btnDone.setOnClickListener(v -> {
-            String name = etCustomExam.getText().toString().trim();
+            String name = etCustomExam.getText().toString().trim(); //take user input
             if (!TextUtils.isEmpty(name)) {
-                examList.get(position).setName(name);
-                updateSelection(position);
-                dialog.dismiss();
+                examList.get(position).setName(name); //update exam name
+                updateSelection(position); //update UI
+                dialog.dismiss();  //close dialog after submit
             } else {
                 Toast.makeText(this, "Please enter exam name", Toast.LENGTH_SHORT).show();
             }
         });
 
-        dialog.show();
+        dialog.show(); //show dialog after click on "Other" option in exam list view
     }
 }
