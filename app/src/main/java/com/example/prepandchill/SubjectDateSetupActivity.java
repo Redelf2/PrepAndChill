@@ -63,7 +63,7 @@ public class SubjectDateSetupActivity extends AppCompatActivity implements Subje
         adapter = new SubjectAdapter(subjectList, this); //SETUP ADAPTER
         rvSubjects.setLayoutManager(new LinearLayoutManager(this)); //SETUP RECYCLER VIEW WITH LINEAR LAYOUT
         rvSubjects.setAdapter(adapter); //ADAPTER IS SETUPED
-        rvSubjects.setNestedScrollingEnabled(true); //DISABLE SCROLLING
+        rvSubjects.setNestedScrollingEnabled(false); //DISABLE SCROLLING
 
         //  Load subjects from DB
         fetchSubjects();
