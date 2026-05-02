@@ -30,7 +30,7 @@ function toDaysLeft(examDate) {
 
 
 // ==========================
-// ✅ GENERATE PLAN (READ ONLY)
+//  GENERATE PLAN (READ ONLY)
 // ==========================
 router.post("/generatePlan", (req, res) => {
 

@@ -64,89 +64,92 @@ router.post("/add", (req, res) => {
 // ==========================
 // ✅ FINAL TRANSACTION (MOST IMPORTANT)
 // ==========================
-router.post("/completeSetup", (req, res) => {
+router.post("/completeSetup", async (req, res) => {
+
     const { firebase_uid, subjects } = req.body;
 
-    if (!firebase_uid || !subjects || !subjects.length) {
+    if (!firebase_uid || !subjects || subjects.length === 0) {
         return res.status(400).json({ error: "Invalid data" });
     }
 
-    db.beginTransaction(err => {
-        if (err) return res.status(500).json({ error: "Transaction start failed" });
+    // helper for async queries
+    const queryAsync = (sql, params = []) =>
+        new Promise((resolve, reject) => {
+            db.query(sql, params, (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
 
-        // 1. Ensure user exists
-        db.query(
+    try {
+        // 🔥 START TRANSACTION
+        await queryAsync("START TRANSACTION");
+
+        // 1️⃣ Ensure user exists
+        await queryAsync(
             "INSERT IGNORE INTO users (firebase_uid, username, email) VALUES (?, ?, ?)",
-            [firebase_uid, "User", firebase_uid + "@local"],
-            (err) => {
-                if (err) return rollback(res, err);
-
-                db.query(
-                    "SELECT id FROM users WHERE firebase_uid = ?",
-                    [firebase_uid],
-                    (err, userRows) => {
-                        if (err || !userRows.length) return rollback(res, err);
-
-                        const userId = userRows[0].id;
-
-                        // 2. Process all subjects
-                        let completed = 0;
-
-                        subjects.forEach(sub => {
-
-                            db.query(
-                                "INSERT IGNORE INTO subjects (name) VALUES (?)",
-                                [sub.name],
-                                (err) => {
-                                    if (err) return rollback(res, err);
-
-                                    db.query(
-                                        "SELECT id FROM subjects WHERE name = ?",
-                                        [sub.name],
-                                        (err, subjRows) => {
-                                            if (err || !subjRows.length) return rollback(res, err);
-
-                                            const subjectId = subjRows[0].id;
-
-                                            db.query(
-                                                `INSERT INTO user_subjects 
-                                                 (user_id, subject_id, exam_date, confidence)
-                                                 VALUES (?, ?, ?, ?)
-                                                 ON DUPLICATE KEY UPDATE
-                                                 exam_date = VALUES(exam_date),
-                                                 confidence = VALUES(confidence)
-                                                `,
-                                                [
-                                                    userId,
-                                                    subjectId,
-                                                    sub.exam_date,
-                                                    sub.confidence
-                                                ],
-                                                (err) => {
-                                                    if (err) return rollback(res, err);
-
-                                                    completed++;
-
-                                                    if (completed === subjects.length) {
-                                                        db.commit(err => {
-                                                            if (err) return rollback(res, err);
-                                                            res.json({ message: "Setup completed" });
-                                                        });
-                                                    }
-                                                }
-                                            );
-                                        }
-                                    );
-                                }
-                            );
-
-                        });
-
-                    }
-                );
-            }
+            [firebase_uid, "User", firebase_uid + "@local"]
         );
-    });
+
+        const userRows = await queryAsync(
+            "SELECT id FROM users WHERE firebase_uid = ?",
+            [firebase_uid]
+        );
+
+        if (!userRows.length) throw new Error("User not found");
+
+        const userId = userRows[0].id;
+
+        // 🔴  DELETE OLD SUBJECTS (CRITICAL FIX)
+        await queryAsync(
+            "DELETE FROM user_subjects WHERE user_id = ?",
+            [userId]
+        );
+
+        //  INSERT NEW SUBJECTS
+        for (const sub of subjects) {
+
+            await queryAsync(
+                "INSERT IGNORE INTO subjects (name) VALUES (?)",
+                [sub.name]
+            );
+
+            const subjRows = await queryAsync(
+                "SELECT id FROM subjects WHERE name = ?",
+                [sub.name]
+            );
+
+            if (!subjRows.length) throw new Error("Subject not found");
+
+            const subjectId = subjRows[0].id;
+
+            await queryAsync(
+                `INSERT INTO user_subjects 
+                (user_id, subject_id, exam_date, confidence)
+                VALUES (?, ?, ?, ?)`,
+                [
+                    userId,
+                    subjectId,
+                    sub.exam_date,
+                    sub.confidence
+                ]
+            );
+        }
+
+        // 🔥 COMMIT
+        await queryAsync("COMMIT");
+
+        res.json({ message: "Setup completed (clean data)" });
+
+    } catch (error) {
+
+        console.error(error);
+
+        // 🔥 ROLLBACK
+        await queryAsync("ROLLBACK");
+
+        res.status(500).json({ error: "Transaction failed" });
+    }
 });
 
 function rollback(res, err) {
