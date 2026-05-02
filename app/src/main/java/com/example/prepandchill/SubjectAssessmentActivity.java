@@ -5,7 +5,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
@@ -103,24 +102,44 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
             }
         });
 
-        // default value
-        int initial = subject.getProficiency();
-        if (initial == 0) initial = 50;
+        // 🔴 IMPORTANT FIX: NO DEFAULT 50%
+        int initial = subject.getProficiency(); // should be 0 initially
 
         seekBar.setProgress(initial);
-        tvPercent.setText(initial + "%");
-        subject.setProficiency(initial);
 
-        // update locally only
+        if (initial == 0) {
+            tvPercent.setText("Not Set");
+        } else {
+            tvPercent.setText(initial + "%");
+        }
+
+        // ✅ ONLY update when user interacts
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvPercent.setText(progress + "%");
-                subject.setProficiency(progress);
+
+                if (progress == 0) {
+                    tvPercent.setText("Not Set");
+                } else {
+                    tvPercent.setText(progress + "%");
+                }
+
+                if (fromUser) {
+                    subject.setProficiency(progress);
+                }
             }
 
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (subject.getProficiency() == 0) {
+                    Toast.makeText(SubjectAssessmentActivity.this,
+                            "Please set proficiency for " + subject.getName(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
         });
 
         container.addView(cardView);
@@ -200,9 +219,11 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
 
                 if (s.getExamDate() == null ||
                         s.getExamDate().equals("Set your exam date") ||
-                        s.getProficiency() <= 0) {
+                        s.getProficiency() == 0) {
 
-                    Toast.makeText(this, "Complete all subjects!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this,
+                            "Complete all subjects (date + proficiency required)",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
 
