@@ -1,47 +1,47 @@
 /**
- * Smart study planner: priority scoring, normalization, time allocation,
- * learning/revision split. Tuned via PLANNER_PARAMS (single source of tuning).
+ * Smart study planner: scoring, sustainable daily caps (esp. single-subject),
+ * difficulty-aware weights, Pomodoro timelines with breaks.
  */
 
 const PLANNER_PARAMS = {
     DEFAULT_DAILY_HOURS: 6,
-    /** When exam_date missing: equivalent "medium" days-to-exam for urgency decay */
     DEFAULT_DAYS_LEFT: 21,
     MIN_DAYS_LEFT: 1,
     DEFAULT_CONFIDENCE: 50,
     MIN_DIFFICULTY: 1,
     MAX_DIFFICULTY: 3,
-    /** Urgency = exp(-daysLeft / URGENCY_DECAY_TAU) — smaller tau → drops faster when far */
     URGENCY_DECAY_TAU: 9,
-    /** Weakness = ((100 - conf) / 100) ^ WEAKNESS_EXP — >1 penalizes low confidence more */
     WEAKNESS_EXP: 1.65,
-    /** Component weights for raw score (before normalization) */
-    WEIGHT_URGENCY: 2.8,
-    WEIGHT_WEAKNESS: 2.2,
-    WEIGHT_REMAINING: 2.6,
-    WEIGHT_DIFFICULTY: 1.4,
-    WEIGHT_MOMENTUM: 1.2,
-    /** Squared urgency emphasis (already rising when close) */
-    URGENCY_POWER: 1.85,
-    /** Momentum: boost when progress in (MOMENTUM_LO, MOMENTUM_HI) */
+    WEIGHT_URGENCY: 2.65,
+    WEIGHT_WEAKNESS: 2.25,
+    WEIGHT_REMAINING: 2.75,
+    WEIGHT_DIFFICULTY: 1.85,
+    WEIGHT_MOMENTUM: 1.15,
+    URGENCY_POWER: 1.82,
     MOMENTUM_LO: 0.12,
     MOMENTUM_HI: 0.92,
     MOMENTUM_BOOST: 1.22,
     MOMENTUM_BASE: 1.0,
-    /** If DB reports 0 topics, use this for syllabus ratio math (still allocate min time) */
     FALLBACK_TOPIC_COUNT: 1,
-    /** Max share of daily minutes for one subject */
     MAX_SUBJECT_RATIO: 0.4,
     DEFAULT_MINUTES_PER_SUBJECT: 25,
-    /** Softmax temperature for weight normalization (higher → flatter, more stable) */
-    SOFTMAX_TEMPERATURE: 2.4,
-    /** Optional jitter on normalized weights: 0 = off, 0.04 = ±4% multiplicative */
+    SOFTMAX_TEMPERATURE: 2.25,
     WEIGHT_JITTER_MAX: 0.05,
-    /** Learning share: base + span * remaining^alpha (remaining in [0,1]) */
-    LEARN_BASE: 0.12,
-    LEARN_SPAN: 0.78,
-    LEARN_CURVE_ALPHA: 0.72,
+    LEARN_BASE: 0.11,
+    LEARN_SPAN: 0.79,
+    LEARN_CURVE_ALPHA: 0.74,
     EPSILON: 1e-9,
+    /** Extra multiplier on raw score for harder subjects × remaining syllabus */
+    DIFFICULTY_PRIORITY_TILT: 0.22,
+    /** Pomodoro defaults */
+    POMODORO_FOCUS_EASY: 28,
+    POMODORO_FOCUS_MID: 25,
+    POMODORO_FOCUS_HARD: 22,
+    POMODORO_SHORT_BREAK: 5,
+    POMODORO_SHORT_BREAK_HARD: 6,
+    POMODORO_LONG_BREAK: 15,
+    POMODORO_LONG_BREAK_HARD: 22,
+    POMODORO_CYCLES_BEFORE_LONG: 4,
 };
 
 function clamp(n, lo, hi) {
@@ -66,9 +66,6 @@ function daysUntilExam(examDate) {
     return Math.max(PLANNER_PARAMS.MIN_DAYS_LEFT, days);
 }
 
-/**
- * Deterministic PRNG [0,1) from string seed (stable plans per user+day when desired).
- */
 function mulberry32FromString(seedStr) {
     let h = 1779033703 ^ seedStr.length;
     for (let i = 0; i < seedStr.length; i++) {
@@ -92,9 +89,6 @@ function softmaxNormalized(values, temperature) {
     return exps.map((e) => e / sum);
 }
 
-/**
- * Apply small multiplicative jitter to weights then renormalize to sum 1.
- */
 function jitterWeights(weights, rng) {
     const jm = PLANNER_PARAMS.WEIGHT_JITTER_MAX;
     if (jm <= 0 || !rng) return weights.slice();
@@ -106,9 +100,6 @@ function jitterWeights(weights, rng) {
     return perturbed.map((w) => w / s);
 }
 
-/**
- * Single subject: raw components and combined raw priority (pre-softmax within batch).
- */
 function computeSubjectBreakdown(row) {
     const p = PLANNER_PARAMS;
     const difficulty = clamp(
@@ -122,10 +113,7 @@ function computeSubjectBreakdown(row) {
             ? p.DEFAULT_CONFIDENCE
             : clamp(Number.parseInt(confidenceRaw, 10), 0, 100);
 
-    const totalTopics = Math.max(
-        Number.parseInt(row.total_topics, 10) || 0,
-        0
-    );
+    const totalTopics = Math.max(Number.parseInt(row.total_topics, 10) || 0, 0);
     const effectiveTotal = Math.max(totalTopics, p.FALLBACK_TOPIC_COUNT);
     const completed = clamp(
         Number.parseInt(row.completed_topics, 10) || 0,
@@ -154,6 +142,13 @@ function computeSubjectBreakdown(row) {
         p.WEIGHT_DIFFICULTY * difficultyNorm +
         p.WEIGHT_MOMENTUM * momentum;
 
+    /** Cognitive-load tilt: harder subjects + more remaining topics pull schedule harder */
+    const tilt =
+        1 +
+        p.DIFFICULTY_PRIORITY_TILT *
+            difficultyNorm *
+            (0.45 + 0.55 * remainingRatio);
+
     return {
         subject_id: row.subject_id,
         subject: row.subject,
@@ -172,20 +167,66 @@ function computeSubjectBreakdown(row) {
             difficulty: difficultyNorm,
             momentum,
         },
-        raw_priority: Math.max(rawPriority, p.EPSILON),
+        raw_priority: Math.max(rawPriority * tilt, p.EPSILON),
     };
 }
 
 /**
- * Allocate totalMinutes across subjects with max share cap and minimum per subject.
- * Refines when sum after caps/mins drifts from totalMinutes.
+ * Single long exam runway → don't burn full "6h preference" every day on one subject.
+ * Compresses toward evidence-style sustainable deep-work caps unless exam is imminent.
  */
+function computeEffectiveDailyBudget(requestedMinutes, breakdowns) {
+    const requested = Math.max(1, Math.round(requestedMinutes));
+    const n = breakdowns.length;
+
+    if (n === 1) {
+        const b = breakdowns[0];
+        const dl = b.days_left;
+        let frac = 1;
+        if (dl >= 28) frac = 0.34;
+        else if (dl >= 21) frac = 0.40;
+        else if (dl >= 14) frac = 0.50;
+        else if (dl >= 10) frac = 0.58;
+        else if (dl >= 7) frac = 0.67;
+        else if (dl >= 5) frac = 0.76;
+        else if (dl >= 3) frac = 0.88;
+        else frac = 1;
+
+        frac *= 1 - 0.06 * Math.max(0, b.difficulty - 1);
+        frac *= 0.9 + 0.1 * clamp(b.components.remaining, 0.15, 1);
+
+        let effective = Math.round(requested * frac);
+        const cognitiveCeiling =
+            dl <= 3 ? requested : dl <= 7 ? Math.min(requested, 330) : Math.min(requested, 255);
+        effective = Math.min(effective, cognitiveCeiling);
+
+        const floor = Math.min(requested, b.remaining_ratio > 0.38 ? 44 : 34);
+        effective = clamp(effective, floor, requested);
+
+        return {
+            effectiveTotal: effective,
+            requestedTotal: requested,
+            rationale: `One subject: today targets **${(effective / 60).toFixed(2)}h focused work** (not the full ${(requested / 60).toFixed(1)}h slider) — spaced practice beats cramming when the exam is **${dl}d** away and difficulty is **${b.difficulty}/3**.`,
+            single_subject_cap: true,
+        };
+    }
+
+    return {
+        effectiveTotal: requested,
+        requestedTotal: requested,
+        rationale:
+            n > 1
+                ? `${n} subjects: full **${(requested / 60).toFixed(1)}h** budget reweighted by urgency, confidence gaps, syllabus left, and hardness — capped so no single course steals >40% unless alone.`
+                : "Budget unchanged.",
+        single_subject_cap: false,
+    };
+}
+
 function allocateMinutesStable(items, totalMinutes) {
     const p = PLANNER_PARAMS;
     const n = items.length;
     if (n === 0) return [];
 
-    /** With one subject, no pair to protect — use full budget; cap only when n ≥ 2 */
     const maxEach =
         n <= 1 ? totalMinutes : totalMinutes * p.MAX_SUBJECT_RATIO;
     const idealMin = Math.min(
@@ -194,10 +235,8 @@ function allocateMinutesStable(items, totalMinutes) {
     );
     const minEach = Math.max(5, idealMin);
 
-    let weights = items.map((it) => it.normalized_weight);
-    const base = weights.map((w) => w * totalMinutes);
-
-    let alloc = base.map((m) => clamp(m, 0, maxEach));
+    const weights = items.map((it) => it.normalized_weight);
+    let alloc = weights.map((w) => clamp(w * totalMinutes, 0, maxEach));
 
     function sumAlloc() {
         return alloc.reduce((a, b) => a + b, 0);
@@ -205,7 +244,7 @@ function allocateMinutesStable(items, totalMinutes) {
 
     let s = sumAlloc();
     if (s < totalMinutes) {
-        let slack = totalMinutes - s;
+        const slack = totalMinutes - s;
         const headroom = alloc.map((m, i) => Math.max(0, maxEach - m));
         const hw = headroom.reduce((a, b) => a + b, 0);
         if (hw > p.EPSILON) {
@@ -217,8 +256,7 @@ function allocateMinutesStable(items, totalMinutes) {
 
     s = sumAlloc();
     if (s > totalMinutes && s > p.EPSILON) {
-        const factor = totalMinutes / s;
-        alloc = alloc.map((m) => m * factor);
+        alloc = alloc.map((m) => m * (totalMinutes / s));
     }
 
     alloc = alloc.map((m) => Math.max(minEach, Math.round(m)));
@@ -283,37 +321,107 @@ function focusLabel(remainingRatio) {
 }
 
 /**
- * Main pipeline from SQL rows → plan array + persist payload.
- *
- * @param {object[]} dbRows — rows from generatePlan SQL
- * @param {number} totalDailyHours
- * @param {object} [opts]
- * @param {boolean} [opts.useJitter] — perturb weights slightly (deterministic seed)
- * @param {string} [opts.jitterSeed] — e.g. `${firebase_uid}:${dateKey}`
+ * Builds alternating focus / break segments until focus budget consumed.
  */
+function buildPomodoroTimeline(focusMinutesTotal, difficultyLevel) {
+    const p = PLANNER_PARAMS;
+    const d = clamp(Number.parseInt(difficultyLevel, 10) || 2, 1, 3);
+    let focusLen =
+        d >= 3
+            ? p.POMODORO_FOCUS_HARD
+            : d <= 1
+              ? p.POMODORO_FOCUS_EASY
+              : p.POMODORO_FOCUS_MID;
+    const shortB =
+        d >= 3 ? p.POMODORO_SHORT_BREAK_HARD : p.POMODORO_SHORT_BREAK;
+    const longB =
+        d >= 3 ? p.POMODORO_LONG_BREAK_HARD : p.POMODORO_LONG_BREAK;
+    const every = p.POMODORO_CYCLES_BEFORE_LONG;
+
+    const timeline = [];
+    let focusLeft = Math.max(1, Math.round(focusMinutesTotal));
+    let cycleIdx = 0;
+    let totalBreak = 0;
+    let pomodoroCount = 0;
+
+    while (focusLeft > 0) {
+        const chunk = Math.min(focusLen, focusLeft);
+        cycleIdx += 1;
+        pomodoroCount += 1;
+        timeline.push({
+            phase: "focus",
+            minutes: chunk,
+            pomodoro_index: pomodoroCount,
+            hint:
+                d >= 3
+                    ? "Hard subject — shorter bursts, higher precision"
+                    : "Single-task; phone away",
+        });
+        focusLeft -= chunk;
+        if (focusLeft <= 0) break;
+
+        const longBreakNext = cycleIdx % every === 0;
+        const br = longBreakNext ? longB : shortB;
+        timeline.push({
+            phase: longBreakNext ? "long_break" : "short_break",
+            minutes: br,
+            hint: longBreakNext ? "Walk, water, eyes off screen" : "Stand & stretch",
+        });
+        totalBreak += br;
+    }
+
+    const totalCal = Math.round(focusMinutesTotal + totalBreak);
+
+    return {
+        focus_typical_block_minutes: focusLen,
+        short_break_minutes: shortB,
+        long_break_minutes: longB,
+        pomodoros_before_long_break: every,
+        timeline,
+        total_focus_minutes: Math.round(focusMinutesTotal),
+        total_break_minutes: totalBreak,
+        total_calendar_minutes: totalCal,
+        summary: `${pomodoroCount} Pomodoro-style focus block(s), ${totalBreak}m recovery breaks → ${Math.round(totalCal / 60)}h ${totalCal % 60}m on the clock`,
+    };
+}
+
+function strategyOneLiner(b, budgetMeta, minutes) {
+    const parts = [];
+    if (budgetMeta.single_subject_cap) {
+        parts.push("Spaced single-focus day");
+    }
+    if (b.difficulty >= 3) parts.push("hard course → shorter bursts");
+    if (b.confidence < 45) parts.push("confidence gap → extra learning slice");
+    if (b.days_left <= 7) parts.push("exam soon → intensity unlocked");
+    parts.push(`${minutes}m mapped to Pomodoro + breaks`);
+    return parts.slice(0, 4).join("; ") + ".";
+}
+
 function buildPlan(dbRows, totalDailyHours, opts = {}) {
     const p = PLANNER_PARAMS;
-    const hours = parsePositiveHours(
-        totalDailyHours,
-        p.DEFAULT_DAILY_HOURS
-    );
-    const totalMinutes = Math.round(hours * 60);
+    const hours = parsePositiveHours(totalDailyHours, p.DEFAULT_DAILY_HOURS);
+    const requestedMinutes = Math.round(hours * 60);
 
     if (!dbRows || dbRows.length === 0) {
         return {
-            total_minutes_budget: totalMinutes,
+            total_minutes_budget: requestedMinutes,
+            effective_minutes_budget: 0,
             plan: [],
             meta: {
                 softmax_temperature: p.SOFTMAX_TEMPERATURE,
                 weight_jitter_max: p.WEIGHT_JITTER_MAX,
                 jitter_applied: false,
+                planner_version: 2,
+                budget_rationale: "No enrolled subjects.",
             },
         };
     }
 
     const breakdowns = dbRows.map(computeSubjectBreakdown);
-    const raw = breakdowns.map((b) => b.raw_priority);
+    const budgetMeta = computeEffectiveDailyBudget(requestedMinutes, breakdowns);
+    const effectiveBudget = budgetMeta.effectiveTotal;
 
+    const raw = breakdowns.map((b) => b.raw_priority);
     let normalized = softmaxNormalized(raw, p.SOFTMAX_TEMPERATURE);
 
     let jitterApplied = false;
@@ -328,7 +436,7 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
         b.normalized_weight = normalized[i];
     });
 
-    const minutesVec = allocateMinutesStable(breakdowns, totalMinutes);
+    const minutesVec = allocateMinutesStable(breakdowns, effectiveBudget);
 
     const zipped = breakdowns.map((b, i) => ({
         b,
@@ -340,6 +448,7 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
 
     const plan = zipped.map(({ b, row, minutes }) => {
         const split = learningRevisionSplit(minutes, b.remaining_ratio);
+        const pomodoro = buildPomodoroTimeline(minutes, b.difficulty);
 
         const combinedScore =
             p.WEIGHT_URGENCY * b.components.urgency +
@@ -350,6 +459,9 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
 
         const syllabusCount = Number(row.total_topics);
         const hasSyllabus = syllabusCount > 0;
+        const progressLine = hasSyllabus
+            ? `${b.completed_topics}/${syllabusCount} topics`
+            : "No syllabus topics (minimal slot)";
 
         const explanationFlags = {
             exam_date_was_missing:
@@ -368,11 +480,14 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
             subject_id: b.subject_id,
             time_hours: Number((minutes / 60).toFixed(3)),
             time_minutes: minutes,
+            session_span_minutes: pomodoro.total_calendar_minutes,
+            progress: progressLine,
             split: {
                 learning_minutes: split.learning_minutes,
                 revision_minutes: split.revision_minutes,
             },
             priority_score: Number(combinedScore.toFixed(4)),
+            pomodoro,
             insights: {
                 urgency:
                     explanationFlags.exam_date_was_missing
@@ -382,15 +497,16 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
                     explanationFlags.confidence_defaulted
                         ? `Baseline weaker profile (confidence not set)`
                         : `${100 - b.confidence}% gap vs full confidence`,
-                progress: hasSyllabus
-                    ? `${b.completed_topics}/${syllabusCount} topics`
-                    : "No syllabus topics (minimal daily slot)",
+                progress: progressLine,
                 focus: focusLabel(b.remaining_ratio),
+                strategy: strategyOneLiner(b, budgetMeta, minutes),
             },
             explanation: {
                 ...explanationFlags,
                 softmax_weight: Number(b.normalized_weight.toFixed(6)),
                 raw_priority: Number(b.raw_priority.toFixed(6)),
+                difficulty_level: b.difficulty,
+                cognitive_note: `Hardness ${b.difficulty}/3 interacts with confidence & days-left to set Pomodoro depth (${pomodoro.focus_typical_block_minutes}m blocks).`,
                 component_breakdown: {
                     urgency_raw: Number(b.components.urgency.toFixed(4)),
                     weakness_raw: Number(b.components.weakness.toFixed(4)),
@@ -411,17 +527,36 @@ function buildPlan(dbRows, totalDailyHours, opts = {}) {
         };
     });
 
+    const avgDiff =
+        breakdowns.reduce((s, x) => s + x.difficulty, 0) /
+        Math.max(breakdowns.length, 1);
+
     return {
-        total_minutes_budget: totalMinutes,
+        total_minutes_budget: requestedMinutes,
+        effective_minutes_budget: effectiveBudget,
         plan,
         meta: {
+            planner_version: 2,
             softmax_temperature: p.SOFTMAX_TEMPERATURE,
             weight_jitter_max: p.WEIGHT_JITTER_MAX,
             jitter_applied: jitterApplied,
+            budget_requested_minutes: requestedMinutes,
+            budget_effective_minutes: effectiveBudget,
+            budget_rationale: budgetMeta.rationale,
+            single_subject_cap_applied: budgetMeta.single_subject_cap,
+            pomodoro_defaults: {
+                cycles_before_long_break: p.POMODORO_CYCLES_BEFORE_LONG,
+            },
             allocator: {
                 max_subject_ratio: p.MAX_SUBJECT_RATIO,
                 soft_min_minutes_requested: p.DEFAULT_MINUTES_PER_SUBJECT,
             },
+            evaluator_notes: [
+                "Scores blend exponential urgency, nonlinear weakness, syllabus remainder, hardness (1–3), and momentum.",
+                "Single-subject days intentionally **under-fill** your slider unless the exam is near — mirrors spaced practice & avoids false '6h drilling' norms.",
+                "Each row includes a **Pomodoro timeline**: focus + mandated breaks; `session_span_minutes` is wall-clock for calendars.",
+                `Average enrolled difficulty this snapshot: **${avgDiff.toFixed(2)} / 3**.`,
+            ],
         },
     };
 }
@@ -433,4 +568,6 @@ module.exports = {
     computeSubjectBreakdown,
     allocateMinutesStable,
     learningRevisionSplit,
+    buildPomodoroTimeline,
+    computeEffectiveDailyBudget,
 };

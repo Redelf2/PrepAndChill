@@ -100,7 +100,7 @@ router.post("/completeSetup", async (req, res) => {
 
         const userId = userRows[0].id;
 
-        // 🔴  DELETE OLD SUBJECTS (CRITICAL FIX)
+        //   DELETE OLD SUBJECTS (CRITICAL FIX)
         await queryAsync(
             "DELETE FROM user_subjects WHERE user_id = ?",
             [userId]

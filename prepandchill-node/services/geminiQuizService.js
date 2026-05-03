@@ -1,50 +1,30 @@
 /**
- * Gemini MCQ generation — tolerant parsing, model fallbacks, optional JSON schema.
+ * Gemini MCQ generation — resolves model IDs dynamically (fixes 404 "model not found").
  */
 
 const axios = require("axios");
 
-const MODEL_CANDIDATES = (
+/** Used only if ListModels fails (offline / network). */
+const STATIC_MODEL_FALLBACKS =
     process.env.GEMINI_MODEL_FALLBACKS ||
-    "gemini-2.0-flash,gemini-2.0-flash-001,gemini-1.5-flash,gemini-1.5-flash-latest,gemini-1.5-flash-8b"
-)
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+    [
+        "gemini-2.5-flash",
+        "gemini-flash-latest",
+        "gemini-2.0-flash-lite",
+        "gemini-2.0-flash-001",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-pro-latest",
+    ].join(",");
 
-const PRIMARY_MODEL = process.env.GEMINI_MODEL || MODEL_CANDIDATES[0];
+const STATIC_MODELS = [
+    process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    ...STATIC_MODEL_FALLBACKS.split(",").map((s) => s.trim()),
+].filter((m, i, a) => m && a.indexOf(m) === i);
 
-/** Gemini REST expects schema types in UPPERCASE (STRING, OBJECT, …). */
-const QUESTIONS_WRAPPER_SCHEMA = {
-    type: "OBJECT",
-    properties: {
-        questions: {
-            type: "ARRAY",
-            items: {
-                type: "OBJECT",
-                properties: {
-                    question: { type: "STRING" },
-                    option_a: { type: "STRING" },
-                    option_b: { type: "STRING" },
-                    option_c: { type: "STRING" },
-                    option_d: { type: "STRING" },
-                    correct_option: { type: "STRING" },
-                    difficulty_level: { type: "INTEGER" },
-                },
-                required: [
-                    "question",
-                    "option_a",
-                    "option_b",
-                    "option_c",
-                    "option_d",
-                    "correct_option",
-                    "difficulty_level",
-                ],
-            },
-        },
-    },
-    required: ["questions"],
-};
+let modelIdCache = null;
+let modelIdCacheTime = 0;
+const MODEL_CACHE_MS = 8 * 60 * 1000;
 
 function resolveGeminiApiKey() {
     return (
@@ -81,43 +61,158 @@ function extractResponseText(data) {
         if (fb?.blockReason) {
             throw new Error(`Gemini blocked prompt: ${fb.blockReason}`);
         }
-        throw new Error("Gemini returned no candidates (check API key & model name)");
+        throw new Error(
+            "Gemini returned no candidates (invalid API key, model disabled, or quota)"
+        );
     }
 
     const parts = cand.content?.parts;
     if (!parts?.length) {
         throw new Error(
-            `Gemini empty content (finishReason=${cand.finishReason || "unknown"})`
+            `Gemini empty content (finishReason=${cand.finishReason || "?"})`
         );
     }
 
-    const texts = parts.map((p) => p.text).filter((t) => t != null && `${t}`.length > 0);
+    const texts = parts.map((p) => p?.text).filter((t) => t && `${t}`.length);
     const joined = texts.join("").trim();
-    if (!joined) {
-        throw new Error("Gemini parts had no text (try another model or disable schema)");
-    }
+    if (!joined) throw new Error("Gemini returned no text in parts");
+
     return joined;
 }
 
 function normalizeToQuestionArray(parsed) {
     if (Array.isArray(parsed)) return parsed;
-    if (parsed && Array.isArray(parsed.questions)) return parsed.questions;
-    if (parsed && Array.isArray(parsed.items)) return parsed.items;
-    throw new Error("Gemini JSON did not contain a questions array");
+    if (parsed?.questions && Array.isArray(parsed.questions)) return parsed.questions;
+    if (parsed?.items && Array.isArray(parsed.items)) return parsed.items;
+    if (parsed?.data && Array.isArray(parsed.data)) return parsed.data;
+    throw new Error("JSON has no question array");
 }
 
-function parseQuestionsPayload(rawText) {
+function parseFlexibleJson(text) {
+    const trimmed = stripCodeFence(text);
     let parsed;
     try {
-        parsed = JSON.parse(rawText);
+        parsed = JSON.parse(trimmed);
     } catch {
-        parsed = JSON.parse(stripCodeFence(rawText));
+        const iObj = trimmed.indexOf("{");
+        const iArr = trimmed.indexOf("[");
+        let slice = trimmed;
+        if (iArr >= 0 && (iObj < 0 || iArr < iObj)) slice = trimmed.slice(iArr);
+        else if (iObj >= 0) slice = trimmed.slice(iObj);
+        try {
+            parsed = JSON.parse(slice);
+        } catch (e2) {
+            throw new Error(
+                `Invalid JSON from model: ${e2.message}. Start: ${trimmed.slice(0, 120)}`
+            );
+        }
     }
     return normalizeToQuestionArray(parsed);
 }
 
-async function postGemini(apiKey, modelId, body) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`;
+/** All model ids supporting generateContent (paginated). */
+async function fetchAvailableModelIds(apiKey) {
+    const out = [];
+    let pageToken;
+    let pages = 0;
+    do {
+        const params = new URLSearchParams({ key: apiKey });
+        if (pageToken) params.set("pageToken", pageToken);
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?${params}`;
+        const res = await axios.get(url, {
+            timeout: 45000,
+            validateStatus: () => true,
+        });
+
+        if (res.status >= 400) {
+            const msg =
+                res.data?.error?.message ||
+                JSON.stringify(res.data).slice(0, 400);
+            throw new Error(`ListModels ${res.status}: ${msg}`);
+        }
+
+        for (const m of res.data.models || []) {
+            if (m.supportedGenerationMethods?.includes("generateContent")) {
+                const id = `${m.name || ""}`.replace(/^models\//, "").trim();
+                if (id) out.push(id);
+            }
+        }
+        pageToken = res.data.nextPageToken;
+        pages += 1;
+        if (pages > 40) break;
+    } while (pageToken);
+
+    return out;
+}
+
+/** Prefer fast text models; skip obvious non-MCQ modalities. */
+function prioritizeModelIds(ids) {
+    const skip =
+        /tts|text-to-speech|embed|embedding|image|vision|robotics|computer-use|live|audio|video/i;
+    const usable = ids.filter((id) => !skip.test(id));
+
+    const score = (id) => {
+        let s = 0;
+        if (/flash/i.test(id)) s += 100;
+        if (/2\.5|3\.|3-/i.test(id)) s += 30;
+        if (/lite/i.test(id)) s += 5;
+        if (/preview|experimental/i.test(id)) s -= 15;
+        if (/latest/i.test(id)) s += 10;
+        return s;
+    };
+
+    return [...usable].sort((a, b) => score(b) - score(a));
+}
+
+/**
+ * Prefer live ListModels order; prepend GEMINI_MODEL; append static guesses.
+ */
+async function buildModelAttemptOrder(apiKey) {
+    const seen = new Set();
+    const ordered = [];
+
+    const push = (id) => {
+        const x = `${id || ""}`.trim();
+        if (!x || seen.has(x)) return;
+        seen.add(x);
+        ordered.push(x);
+    };
+
+    if (process.env.GEMINI_MODEL?.trim()) {
+        push(process.env.GEMINI_MODEL.trim());
+    }
+
+    try {
+        const now = Date.now();
+        let discovered = modelIdCache;
+        if (!discovered || now - modelIdCacheTime > MODEL_CACHE_MS) {
+            discovered = await fetchAvailableModelIds(apiKey);
+            modelIdCache = discovered;
+            modelIdCacheTime = now;
+            if (/^1|true|yes$/i.test(process.env.GEMINI_VERBOSE || "")) {
+                console.log(
+                    "[Gemini] ListModels count:",
+                    discovered.length,
+                    "top:",
+                    discovered.slice(0, 8)
+                );
+            }
+        }
+        for (const id of prioritizeModelIds(discovered)) push(id);
+    } catch (e) {
+        console.warn("[Gemini] ListModels failed; using static list:", e.message);
+    }
+
+    for (const id of STATIC_MODELS) push(id);
+
+    return ordered.length ? ordered : ["gemini-2.0-flash", "gemini-pro-latest"];
+}
+
+async function postGenerateContent(apiKey, apiVersion, modelId, body) {
+    const base = `https://generativelanguage.googleapis.com/${apiVersion}`;
+    const url = `${base}/models/${encodeURIComponent(modelId)}:generateContent`;
+
     const res = await axios.post(`${url}?key=${encodeURIComponent(apiKey)}`, body, {
         headers: { "Content-Type": "application/json" },
         timeout: 120000,
@@ -126,10 +221,19 @@ async function postGemini(apiKey, modelId, body) {
 
     const { status, data } = res;
 
+    if (status === 429) {
+        const msg =
+            data?.error?.message ||
+            "Quota or rate limit exceeded. Wait or check billing in Google AI Studio.";
+        const err = new Error(`Gemini quota (429): ${msg}`);
+        err.status = 429;
+        throw err;
+    }
+
     if (status >= 400) {
         const msg =
             data?.error?.message ||
-            (typeof data === "string" ? data : JSON.stringify(data)).slice(0, 500);
+            (typeof data === "string" ? data : JSON.stringify(data)).slice(0, 700);
         const err = new Error(`Gemini HTTP ${status}: ${msg}`);
         err.status = status;
         throw err;
@@ -137,11 +241,8 @@ async function postGemini(apiKey, modelId, body) {
 
     if (data?.error) {
         const msg =
-            data.error.message ||
-            data.error.status ||
-            JSON.stringify(data.error).slice(0, 400);
-        const err = new Error(`Gemini API: ${msg}`);
-        err.status = data.error.code || 400;
+            data.error.message || JSON.stringify(data.error).slice(0, 500);
+        const err = new Error(`Gemini error: ${msg}`);
         throw err;
     }
 
@@ -152,31 +253,47 @@ async function postGemini(apiKey, modelId, body) {
     return data;
 }
 
-function buildPrompt(subjectName, topicNames, numQuestions, compact) {
-    const topicsSnippet =
-        topicNames.slice(0, 80).join(" | ") || "(general subject coverage)";
-
-    if (compact) {
-        return `Create exactly ${numQuestions} undergraduate-level MCQs for "${subjectName}". Context topics: ${topicsSnippet}. Output valid JSON only.`;
+/** Try v1beta then v1 for the same payload (some keys only expose one API version). */
+async function postGeminiBestEffort(apiKey, modelId, body) {
+    try {
+        return await postGenerateContent(apiKey, "v1beta", modelId, body);
+    } catch (e) {
+        if (e.status === 404 || /not found|404/i.test(e.message || "")) {
+            return await postGenerateContent(apiKey, "v1", modelId, body);
+        }
+        throw e;
     }
+}
 
-    return `You write undergraduate exam practice questions.
+function buildFullPrompt(subjectName, topicNames, numQuestions) {
+    const topicsSnippet =
+        topicNames.slice(0, 120).join(" | ") || "general syllabus";
 
-Subject: "${subjectName}"
-Syllabus topic titles (context): ${topicsSnippet}
+    return `You are writing practice exam MCQs.
 
-Return exactly ${numQuestions} multiple-choice questions.
+Subject name: "${subjectName}"
+Topics (reference only): ${topicsSnippet}
 
-Each question MUST be a JSON object with keys:
-"question","option_a","option_b","option_c","option_d","correct_option","difficulty_level"
+Create exactly ${numQuestions} distinct multiple-choice questions.
+
+Output MUST be a single JSON object (no markdown) with this shape only:
+{"questions":[
+  {
+    "question":"...",
+    "option_a":"...",
+    "option_b":"...",
+    "option_c":"...",
+    "option_d":"...",
+    "correct_option":"A",
+    "difficulty_level":2
+  }
+]}
 
 Rules:
-- correct_option is one of: "A","B","C","D"
-- difficulty_level is integer 1 (easy), 2 (medium), or 3 (hard)
-- Balance difficulty across the set
-- Four plausible distinct options per question
-
-Return a JSON object of the form: {"questions":[ {...}, ... ]}`;
+- difficulty_level is 1, 2, or 3
+- correct_option must be exactly A, B, C, or D
+- Balance difficulties across questions;
+- Four meaningful options each.`;
 }
 
 function cleanQuestionRows(rawArray, numQuestions) {
@@ -204,126 +321,83 @@ function cleanQuestionRows(rawArray, numQuestions) {
     }
 
     if (cleaned.length === 0) {
-        throw new Error("No valid questions after parsing Gemini output");
+        throw new Error("Model output had no usable MCQ rows after validation");
     }
     return cleaned;
 }
 
 /**
- * @returns {Promise<Array<{question,option_a,option_b,option_c,option_d,correct_option,difficulty_level}>>}
+ * @returns {Promise<Array<{question,...}>>}
  */
 async function generateMcqsWithGemini(apiKey, subjectName, topicNames, numQuestions) {
     if (!apiKey) throw new Error("Missing Gemini API key");
 
-    const modelsToTry = [PRIMARY_MODEL, ...MODEL_CANDIDATES.filter((m) => m !== PRIMARY_MODEL)];
+    const verbose = /^1|true|yes$/i.test(process.env.GEMINI_VERBOSE || "");
+    const promptText = buildFullPrompt(subjectName, topicNames, numQuestions);
 
-    const attempts = [];
+    const modelIds = await buildModelAttemptOrder(apiKey);
 
-    for (const modelId of modelsToTry) {
-        /** 1) Structured JSON (preferred) */
-        attempts.push({
-            modelId,
-            label: "schema",
+    const bodies = [
+        {
+            label: "jsonMime",
             body: {
-                contents: [
-                    {
-                        role: "user",
-                        parts: [
-                            {
-                                text: buildPrompt(subjectName, topicNames, numQuestions, true),
-                            },
-                        ],
-                    },
-                ],
+                contents: [{ parts: [{ text: promptText }] }],
                 generationConfig: {
-                    temperature: 0.55,
-                    responseMimeType: "application/json",
-                    responseSchema: QUESTIONS_WRAPPER_SCHEMA,
-                },
-            },
-        });
-
-        /** 2) JSON MIME without schema (broader model support) */
-        attempts.push({
-            modelId,
-            label: "json-only",
-            body: {
-                contents: [
-                    {
-                        parts: [
-                            {
-                                text: buildPrompt(subjectName, topicNames, numQuestions, false),
-                            },
-                        ],
-                    },
-                ],
-                generationConfig: {
-                    temperature: 0.65,
+                    temperature: 0.6,
+                    maxOutputTokens: 8192,
                     responseMimeType: "application/json",
                 },
             },
-        });
-
-        /** 3) Plain text JSON prompt (legacy fallback) */
-        attempts.push({
-            modelId,
+        },
+        {
             label: "text",
             body: {
-                contents: [
-                    {
-                        parts: [
-                            {
-                                text:
-                                    buildPrompt(subjectName, topicNames, numQuestions, false) +
-                                    "\n\nIf you cannot use an object wrapper, return ONLY a JSON array of question objects.",
-                            },
-                        ],
-                    },
-                ],
+                contents: [{ parts: [{ text: promptText }] }],
                 generationConfig: {
-                    temperature: 0.65,
+                    temperature: 0.6,
+                    maxOutputTokens: 8192,
                 },
             },
-        });
-    }
+        },
+    ];
 
     let lastErr = null;
 
-    for (const att of attempts) {
-        try {
-            const data = await postGemini(apiKey, att.modelId, att.body);
-            const text = extractResponseText(data);
-            let arr;
+    for (const modelId of modelIds) {
+        for (const { label, body } of bodies) {
             try {
-                arr = parseQuestionsPayload(text);
-            } catch {
-                try {
-                    const trimmed = stripCodeFence(text);
-                    const parsed = JSON.parse(trimmed);
-                    arr = normalizeToQuestionArray(parsed);
-                } catch (e2) {
-                    throw new Error(
-                        `Gemini JSON parse failed: ${e2.message}. Snippet: ${text.slice(0, 280)}`
-                    );
-                }
-            }
-
-            const cleaned = cleanQuestionRows(arr, numQuestions);
-            if (cleaned.length > 0) {
+                if (verbose) console.log("[Gemini] try:", modelId, label);
+                const data = await postGeminiBestEffort(apiKey, modelId, body);
+                const text = extractResponseText(data);
+                const arr = parseFlexibleJson(text);
+                const cleaned = cleanQuestionRows(arr, numQuestions);
+                if (verbose) console.log("[Gemini] ok:", modelId, label);
                 return cleaned;
+            } catch (e) {
+                lastErr = e;
+                if (verbose) console.warn("[Gemini] fail:", modelId, label, e.message);
+                /** If JSON MIME unsupported, second body often works */
+                continue;
             }
-        } catch (e) {
-            lastErr = e;
-            /** Schema unsupported etc. — try next attempt */
-            continue;
         }
     }
 
-    throw lastErr || new Error("All Gemini attempts failed");
+    const hint =
+        "Set GEMINI_MODEL to an id from GET https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY (field name without `models/`).";
+    throw new Error(
+        `${lastErr?.message || "All Gemini attempts failed"}. ${hint}`
+    );
+}
+
+function clearGeminiModelCache() {
+    modelIdCache = null;
+    modelIdCacheTime = 0;
 }
 
 module.exports = {
     generateMcqsWithGemini,
     resolveGeminiApiKey,
-    GEMINI_MODEL: PRIMARY_MODEL,
+    clearGeminiModelCache,
+    fetchAvailableModelIds,
+    GEMINI_MODEL: process.env.GEMINI_MODEL || "(resolved at runtime)",
 };

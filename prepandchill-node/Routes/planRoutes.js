@@ -61,14 +61,15 @@ router.post("/generatePlan", async (req, res) => {
         const useJitter = Boolean(vary_plan);
         const jitterSeed = `${firebase_uid}:${dateKey}`;
 
-        const { plan, meta, total_minutes_budget } = buildPlan(
-            rows,
-            total_daily_hours,
-            {
-                useJitter,
-                jitterSeed,
-            }
-        );
+        const {
+            plan,
+            meta,
+            total_minutes_budget,
+            effective_minutes_budget,
+        } = buildPlan(rows, total_daily_hours, {
+            useJitter,
+            jitterSeed,
+        });
 
         if (plan.length > 0) {
             try {
@@ -101,6 +102,7 @@ router.post("/generatePlan", async (req, res) => {
             meta: {
                 ...meta,
                 total_minutes_budget,
+                effective_minutes_budget,
                 jitter_seed_used: useJitter ? jitterSeed : null,
             },
         });

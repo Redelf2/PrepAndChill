@@ -49,13 +49,19 @@ async function resolveSubject(subjectParam) {
         `
         SELECT id, name FROM subjects
         WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
-        LIMIT 2
+        ORDER BY id ASC
+        LIMIT 1
         `,
         [`${subjectParam}`.trim()]
     );
 
     if (!rows?.length) return null;
-    if (rows.length > 1) return null;
+    if (rows.length > 1) {
+        console.warn(
+            "[quiz] Multiple subjects matched name;",
+            `${subjectParam} — using id=${rows[0].id}`
+        );
+    }
     return rows[0];
 }
 
@@ -476,26 +482,55 @@ router.post("/submit", async (req, res) => {
     }
 });
 
+async function countStoredQuestionsForSubject(subjectId) {
+    const rows = await queryAsync(
+        `
+        SELECT COUNT(*) AS c
+        FROM quiz_questions q
+        INNER JOIN topics t ON t.id = q.topic_id
+        WHERE t.subject_id = ?
+        `,
+        [subjectId]
+    );
+    return Number(rows[0]?.c) || 0;
+}
+
+async function sampleStoredQuestionsForSubject(subjectId, limit) {
+    const cap = Math.min(Math.max(1, limit), 500);
+    return queryAsync(
+        `
+        SELECT
+            q.id,
+            q.topic_id,
+            q.difficulty_level,
+            q.question,
+            q.option_a,
+            q.option_b,
+            q.option_c,
+            q.option_d
+        FROM quiz_questions q
+        INNER JOIN topics t ON t.id = q.topic_id
+        WHERE t.subject_id = ?
+        ORDER BY RAND()
+        LIMIT ?
+        `,
+        [subjectId, cap]
+    );
+}
+
 /**
- * Gemini generates MCQs for a subject, INSERTs into quiz_questions (needs syllabus topics),
- * returns sanitized payload for the mobile client (no correct answers).
+ * Returns quiz rows for the client (no correct_option).
+ * Prefers existing DB rows so Gemini is only called when the pool is too small.
+ * Body: subject | subject_name, num_questions, optional force_refresh (true = always call Gemini).
  */
 router.post("/generateForSubject", async (req, res) => {
-    const apiKey = resolveGeminiApiKey();
-    if (!apiKey) {
-        return res.status(503).json({
-            success: false,
-            error:
-                "No Gemini key: set GEMINI_API_KEY or GOOGLE_API_KEY in prepandchill-node/.env (never commit .env). Restart the server after editing.",
-        });
-    }
-
     const subjectParam = req.body?.subject ?? req.body?.subject_name;
     const numRaw = Number(req.body?.num_questions ?? 10);
     const numQuestions = Math.min(
         15,
         Math.max(4, Number.isFinite(numRaw) ? numRaw : 10)
     );
+    const forceRefresh = Boolean(req.body?.force_refresh);
 
     if (!subjectParam || `${subjectParam}`.trim() === "") {
         return res.status(400).json({
@@ -534,6 +569,49 @@ router.post("/generateForSubject", async (req, res) => {
         const topicNames = topics.map((t) => t.topic_name);
         const topicIds = topics.map((t) => t.id);
 
+        const storedCount = await countStoredQuestionsForSubject(subjectRow.id);
+
+        if (!forceRefresh && storedCount >= numQuestions) {
+            const rows = await sampleStoredQuestionsForSubject(
+                subjectRow.id,
+                numQuestions
+            );
+            const questionsOut = rows.map((r) => ({
+                id: Number(r.id),
+                topic_id: Number(r.topic_id),
+                difficulty_level: Number(r.difficulty_level) || 2,
+                question: r.question,
+                option_a: r.option_a,
+                option_b: r.option_b,
+                option_c: r.option_c,
+                option_d: r.option_d,
+            }));
+
+            return res.json({
+                success: true,
+                subject: subjectRow.name,
+                subject_id: subjectRow.id,
+                source: "database",
+                from_cache: true,
+                stored_question_count: storedCount,
+                quiz_size: questionsOut.length,
+                questions: questionsOut,
+                message:
+                    "Serving random questions from your bank (no Gemini call). Use force_refresh only when you want new AI questions.",
+            });
+        }
+
+        const apiKey = resolveGeminiApiKey();
+        if (!apiKey) {
+            return res.status(503).json({
+                success: false,
+                error:
+                    storedCount > 0
+                        ? `Only ${storedCount} question(s) stored; need ${numQuestions}. Add GEMINI_API_KEY to .env to generate more, or lower num_questions.`
+                        : "No Gemini key: set GEMINI_API_KEY or GOOGLE_API_KEY in prepandchill-node/.env to generate the first quiz batch.",
+            });
+        }
+
         const generated = await generateMcqsWithGemini(
             apiKey,
             subjectRow.name,
@@ -570,9 +648,10 @@ router.post("/generateForSubject", async (req, res) => {
                     ]
                 );
 
+                const insRow = Array.isArray(ins) ? ins[0] : ins;
                 let insertId =
-                    ins?.insertId !== undefined && ins?.insertId !== null
-                        ? Number(ins.insertId)
+                    insRow?.insertId !== undefined && insRow?.insertId !== null
+                        ? Number(insRow.insertId)
                         : NaN;
                 if (!Number.isFinite(insertId) || insertId <= 0) {
                     const lid = await queryAsync(
@@ -604,13 +683,21 @@ router.post("/generateForSubject", async (req, res) => {
             throw inner;
         }
 
+        const newTotal =
+            storedCount + questionsOut.length;
+
         return res.json({
             success: true,
             subject: subjectRow.name,
             subject_id: subjectRow.id,
             source: "gemini",
+            from_cache: false,
+            stored_question_count_before: storedCount,
+            stored_question_count_after: newTotal,
             quiz_size: questionsOut.length,
             questions: questionsOut,
+            message:
+                "Generated with Gemini and saved to your question bank. Next requests reuse DB until you force_refresh.",
         });
     } catch (err) {
         console.error(

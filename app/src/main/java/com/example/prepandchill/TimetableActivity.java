@@ -167,10 +167,14 @@ public class TimetableActivity extends AppCompatActivity {
             String subject = item.optString("subject", "Subject");
             int subjectId = item.optInt("subject_id", -1);
             int minutes = item.optInt("time_minutes", 60);
+            int spanMinutes = item.optInt("session_span_minutes", minutes);
             String progress = item.optString("progress", "");
 
+            JSONObject pomodoro = item.optJSONObject("pomodoro");
+            String pomSummary = pomodoro != null ? pomodoro.optString("summary", "").trim() : "";
+
             Calendar end = (Calendar) start.clone();
-            end.add(Calendar.MINUTE, Math.max(25, minutes));
+            end.add(Calendar.MINUTE, Math.max(25, spanMinutes));
 
             String timeRange = formatTime(start.getTime()) + " - " + formatTime(end.getTime());
 
@@ -184,7 +188,11 @@ public class TimetableActivity extends AppCompatActivity {
 
             tvTitle.setText(subject);
             tvTime.setText(timeRange);
-            tvMeta.setText(progress != null && !progress.isEmpty() ? progress : ("Planned: " + PlanParser.formatMinutes(minutes)));
+            String metaLine = progress != null && !progress.isEmpty() ? progress : ("Planned: " + PlanParser.formatMinutes(minutes));
+            if (!pomSummary.isEmpty()) {
+                metaLine += (metaLine.isEmpty() ? "" : " · ") + pomSummary;
+            }
+            tvMeta.setText(metaLine);
 
             final List<JSONObject> topicList = new ArrayList<>();
             fetchTwoFocusTopics(subject, tvTopic1, tvTopic2, topicList);

@@ -115,17 +115,30 @@ public class StudyActivity extends AppCompatActivity {
             final String subjectName = o.optString("subject", "Subject");
             final int subjectId = o.optInt("subject_id", -1);
             final int minutes = o.optInt("time_minutes", 25);
-            
+            final int spanMinutes = o.optInt("session_span_minutes", minutes);
+
             JSONObject split = o.optJSONObject("split");
             String splitText = "";
             if (split != null) {
                 splitText = "Learn: " + split.optInt("learning_minutes") + "m | Revise: " + split.optInt("revision_minutes") + "m";
             }
 
+            JSONObject pomodoro = o.optJSONObject("pomodoro");
+            String pomSummary = pomodoro != null ? pomodoro.optString("summary", "").trim() : "";
+
             JSONObject insights = o.optJSONObject("insights");
             String insightText = "";
             if (insights != null) {
                 insightText = insights.optString("urgency") + " • " + insights.optString("focus");
+                String strategy = insights.optString("strategy", "").trim();
+                if (!strategy.isEmpty()) {
+                    insightText += "\n" + strategy;
+                }
+                if (!pomSummary.isEmpty()) {
+                    insightText += "\n" + pomSummary;
+                }
+            } else if (!pomSummary.isEmpty()) {
+                insightText = pomSummary;
             }
             
             String progress = o.optString("progress", "");
@@ -141,7 +154,11 @@ public class StudyActivity extends AppCompatActivity {
             View btnStart = row.findViewById(R.id.btnStartSession);
 
             tvSubject.setText(subjectName);
-            tvDuration.setText(PlanParser.formatMinutes(minutes));
+            String durationLine = PlanParser.formatMinutes(minutes) + " focus";
+            if (spanMinutes > minutes) {
+                durationLine += " · " + PlanParser.formatMinutes(spanMinutes) + " with breaks";
+            }
+            tvDuration.setText(durationLine);
             tvProgress.setText(progress);
             tvSplit.setText(splitText);
             tvInsights.setText(insightText);
