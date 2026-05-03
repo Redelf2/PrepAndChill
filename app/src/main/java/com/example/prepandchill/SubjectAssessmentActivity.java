@@ -9,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
@@ -24,13 +26,24 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SubjectAssessmentActivity extends AppCompatActivity {
+
+    private static final class QuizCardRefs {
+        Subject subject;
+        SeekBar seekBar;
+        TextView tvPercent;
+    }
 
     private LinearLayout container;
     private ArrayList<Subject> selectedSubjects;
     private RequestQueue queue;
     private String firebaseUid;
+
+    private final Map<String, QuizCardRefs> quizCardRefsBySubject = new HashMap<>();
+    private ActivityResultLauncher<Intent> quizLauncher;
 
     private final String BASE_IP = "10.7.28.203";
     private final String SUBJECTS_BASE_URL = "http://" + BASE_IP + ":3000/api/subjects";
@@ -39,10 +52,42 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        quizLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                        return;
+                    }
+                    String name = result.getData().getStringExtra(SubjectQuizActivity.RESULT_SUBJECT_NAME);
+                    int conf = result.getData().getIntExtra(SubjectQuizActivity.RESULT_CONFIDENCE, -1);
+                    int diff = result.getData().getIntExtra(SubjectQuizActivity.RESULT_DIFFICULTY, -1);
+                    if (name == null || conf < 0) return;
+
+                    QuizCardRefs refs = quizCardRefsBySubject.get(name);
+                    if (refs == null) return;
+
+                    refs.subject.setProficiency(conf);
+                    refs.seekBar.setProgress(conf);
+                    refs.tvPercent.setText(conf + "%");
+                    if (diff >= 1 && diff <= 3) {
+                        refs.subject.setDifficulty(diff);
+                    }
+
+                    Toast.makeText(this,
+                            "Proficiency updated from quiz for " + name,
+                            Toast.LENGTH_SHORT).show();
+                });
+
         setContentView(R.layout.activity_subject_assessment);
 
         container = findViewById(R.id.llAssessmentContainer);
         MaterialButton btnGenerate = findViewById(R.id.btnGenerate);
+
+        ImageView btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         queue = Volley.newRequestQueue(this);
 
@@ -140,6 +185,35 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                 }
             }
+        });
+
+        QuizCardRefs qr = new QuizCardRefs();
+        qr.subject = subject;
+        qr.seekBar = seekBar;
+        qr.tvPercent = tvPercent;
+        quizCardRefsBySubject.put(subject.getName(), qr);
+
+        MaterialButton btnQuizAi = cardView.findViewById(R.id.btnQuizAi);
+        btnQuizAi.setOnClickListener(v -> {
+            if (firebaseUid == null || firebaseUid.isEmpty()) {
+                Toast.makeText(this,
+                        "Sign in to take the proficiency quiz",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (details.getVisibility() != View.VISIBLE) {
+                details.setVisibility(View.VISIBLE);
+                arrow.setRotation(90);
+                if (topicsContainer.getChildCount() == 0) {
+                    fetchTopics(subject.getName(), topicsContainer);
+                }
+            }
+
+            Intent intent = new Intent(this, SubjectQuizActivity.class);
+            intent.putExtra(SubjectQuizActivity.EXTRA_SUBJECT, subject.getName());
+            intent.putExtra(SubjectQuizActivity.EXTRA_FIREBASE_UID, firebaseUid);
+            quizLauncher.launch(intent);
         });
 
         container.addView(cardView);

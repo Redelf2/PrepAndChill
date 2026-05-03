@@ -145,7 +145,7 @@ router.post("/completeSetup", async (req, res) => {
 
         console.error(error);
 
-        // 🔥 ROLLBACK
+        //  ROLLBACK
         await queryAsync("ROLLBACK");
 
         res.status(500).json({ error: "Transaction failed" });

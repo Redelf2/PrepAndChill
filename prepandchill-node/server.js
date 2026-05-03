@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
@@ -10,6 +12,8 @@ app.use(express.json());
 app.use("/api/auth", require("./Routes/authRoutes"));
 app.use("/api/subjects", require("./Routes/subjectRoutes"));
 app.use("/api/plan", require("./Routes/planRoutes"));
+app.use("/api/sessions", require("./Routes/sessionRoutes"));
+app.use("/api/quiz", require("./Routes/quizRoutes"));
 
 app.get("/", (req, res) => res.send("Server Running"));
 

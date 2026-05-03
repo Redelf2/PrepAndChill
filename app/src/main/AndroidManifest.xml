@@ -26,6 +26,9 @@
         <activity android:name=".ExamSelectionActivity" />
         <activity android:name=".SubjectDateSetupActivity" />
         <activity android:name=".SubjectAssessmentActivity" />
+        <activity
+            android:name=".SubjectQuizActivity"
+            android:exported="false" />
         <activity android:name=".HomeActivity" />
         <activity android:name=".TimetableActivity" />
         <activity android:name=".ConfidenceMapActivity" />

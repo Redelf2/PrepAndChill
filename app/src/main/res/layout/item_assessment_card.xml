@@ -91,6 +91,23 @@
             android:progressTint="#F97316"
             android:thumbTint="#F97316" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnQuizAi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#312E81"
+            android:fontFamily="@font/outfit_bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Set proficiency with AI quiz"
+            android:textAllCaps="false"
+            android:textColor="#E0E7FF"
+            android:textSize="14sp"
+            app:cornerRadius="12dp"
+            app:strokeColor="#6366F1"
+            app:strokeWidth="1dp" />
+
         <!-- Syllabus Topics Section -->
         <TextView
             android:layout_width="wrap_content"
