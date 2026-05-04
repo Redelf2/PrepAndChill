@@ -320,9 +320,7 @@ function focusLabel(remainingRatio) {
     return "Revision & reinforcement";
 }
 
-/**
- * Builds alternating focus / break segments until focus budget consumed.
- */
+
 function buildPomodoroTimeline(focusMinutesTotal, difficultyLevel) {
     const p = PLANNER_PARAMS;
     const d = clamp(Number.parseInt(difficultyLevel, 10) || 2, 1, 3);

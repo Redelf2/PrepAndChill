@@ -41,6 +41,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
     private ArrayList<Subject> selectedSubjects;
     private RequestQueue queue;
     private String firebaseUid;
+    private String selectedExamName;
 
     private final Map<String, QuizCardRefs> quizCardRefsBySubject = new HashMap<>();
     private ActivityResultLauncher<Intent> quizLauncher;
@@ -95,6 +96,7 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
         firebaseUid = (user != null) ? user.getUid() : null;
 
         selectedSubjects = (ArrayList<Subject>) getIntent().getSerializableExtra("selectedSubjects");
+        selectedExamName = getIntent().getStringExtra("selectedExam");
 
         if (selectedSubjects == null || selectedSubjects.isEmpty()) {
             Toast.makeText(this, "No subjects found", Toast.LENGTH_SHORT).show();
@@ -343,6 +345,8 @@ public class SubjectAssessmentActivity extends AppCompatActivity {
                         Intent intent = new Intent(this, HomeActivity.class);
                         intent.putExtra("generatedPlanJson",
                                 plan != null ? plan.toString() : "[]");
+                        intent.putExtra("selectedSubjects", selectedSubjects);
+                        intent.putExtra("selectedExam", selectedExamName);
 
                         startActivity(intent);
                         finish();

@@ -120,7 +120,12 @@ public class SubjectDateSetupActivity extends AppCompatActivity
                             boolean selected = old != null && old.isSelected();
                             String date = old != null ? old.getExamDate() : examDate;
 
-                            subjectList.add(new Subject(name, date, selected));
+                            int sid = obj.optInt("id", 0);
+                            Subject s = sid > 0
+                                    ? new Subject(sid, name, date, selected)
+                                    : new Subject(name, date, selected);
+                            s.setProficiency(obj.optInt("confidence", 0));
+                            subjectList.add(s);
 
                         } catch (Exception e) {
                             e.printStackTrace();

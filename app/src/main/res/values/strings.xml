@@ -7,6 +7,8 @@
     <string name="confidence_map">Confidence Map</string>
     <string name="avg_confidence">Avg. Confidence</string>
     <string name="total_topics">Total Topics</string>
+    <string name="subjects_tracked">Subjects tracked</string>
+    <string name="confidence_map_subtitle">From setup &amp; AI proficiency quiz</string>
     <string name="mastered_format">%1$d/%2$d Mastered</string>
     <string name="strong">Strong</string>
     <string name="mid">Mid</string>

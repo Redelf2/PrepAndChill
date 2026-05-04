@@ -38,9 +38,7 @@ const SUBJECT_PROGRESS_SQL = `
     WHERE u.firebase_uid = ?
 `;
 
-// ==========================
-//  GENERATE PLAN
-// ==========================
+
 router.post("/generatePlan", async (req, res) => {
     const { firebase_uid, total_daily_hours, vary_plan } = req.body;
 
@@ -114,9 +112,7 @@ router.post("/generatePlan", async (req, res) => {
     }
 });
 
-// ==========================
-//  PLAN HISTORY (uses idx_plan_history_user_plan_date)
-// ==========================
+
 router.get("/history", (req, res) => {
     const { firebase_uid, from, to } = req.query;
 

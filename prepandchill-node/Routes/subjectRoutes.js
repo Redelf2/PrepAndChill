@@ -3,9 +3,36 @@ const router = express.Router();
 const db = require("../db");
 
 
-// ==========================
-// ✅ GET ALL SUBJECTS (FIXED)
-// ==========================
+router.get("/mine", (req, res) => {
+    const firebase_uid = req.query.firebase_uid;
+
+    if (!firebase_uid) {
+        return res.status(400).json({ error: "firebase_uid is required" });
+    }
+
+    const sql = `
+        SELECT
+            s.id,
+            s.name,
+            COALESCE(us.exam_date, '') AS exam_date,
+            COALESCE(us.confidence, 0) AS confidence,
+            COALESCE(us.difficulty, 2) AS difficulty
+        FROM user_subjects us
+        INNER JOIN users u ON u.id = us.user_id AND u.firebase_uid = ?
+        INNER JOIN subjects s ON s.id = us.subject_id
+        ORDER BY s.name ASC
+    `;
+
+    db.query(sql, [firebase_uid], (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: "DB error" });
+        }
+        res.json(result);
+    });
+});
+
+
 router.get("/", (req, res) => {
     const firebase_uid = req.query.firebase_uid;
 
@@ -37,9 +64,7 @@ router.get("/", (req, res) => {
 });
 
 
-// ==========================
-// ✅ ADD SUBJECT (ONLY MASTER TABLE)
-// ==========================
+
 router.post("/add", (req, res) => {
     const { name } = req.body;
 
@@ -61,9 +86,7 @@ router.post("/add", (req, res) => {
 });
 
 
-// ==========================
-// ✅ FINAL TRANSACTION (MOST IMPORTANT)
-// ==========================
+
 router.post("/completeSetup", async (req, res) => {
 
     const { firebase_uid, subjects } = req.body;
@@ -82,10 +105,10 @@ router.post("/completeSetup", async (req, res) => {
         });
 
     try {
-        // 🔥 START TRANSACTION
+        //  START TRANSACTION
         await queryAsync("START TRANSACTION");
 
-        // 1️⃣ Ensure user exists
+        //  Ensure user exists
         await queryAsync(
             "INSERT IGNORE INTO users (firebase_uid, username, email) VALUES (?, ?, ?)",
             [firebase_uid, "User", firebase_uid + "@local"]
@@ -136,7 +159,7 @@ router.post("/completeSetup", async (req, res) => {
             );
         }
 
-        // 🔥 COMMIT
+        //  COMMIT
         await queryAsync("COMMIT");
 
         res.json({ message: "Setup completed (clean data)" });
@@ -160,9 +183,7 @@ function rollback(res, err) {
 }
 
 
-// ==========================
-// ✅ DELETE SUBJECT (USER LEVEL)
-// ==========================
+
 router.delete("/delete", (req, res) => {
     const { firebase_uid, subject_name } = req.query;
 
@@ -180,9 +201,7 @@ router.delete("/delete", (req, res) => {
 });
 
 
-// ==========================
-// ✅ TOPICS (UNCHANGED)
-// ==========================
+
 router.get("/topics", (req, res) => {
     const { name, firebase_uid } = req.query;
 
